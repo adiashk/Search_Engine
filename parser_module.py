@@ -1,6 +1,7 @@
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from document import Document
+from nltk.tokenize import WhitespaceTokenizer
 
 
 class Parse:
@@ -14,7 +15,8 @@ class Parse:
         :param text:
         :return:
         """
-        text_tokens = word_tokenize(text)
+        #text_tokens = word_tokenize(text)
+        text_tokens = WhitespaceTokenizer().tokenize(text)
         text_tokens_without_stopwords = [w.lower() for w in text_tokens if w not in self.stop_words]
         return text_tokens_without_stopwords
 
