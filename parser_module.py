@@ -1,5 +1,7 @@
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
+from nltk.tokenize import WhitespaceTokenizer
+from nltk.tokenize import TweetTokenizer
 from document import Document
 
 
@@ -14,8 +16,11 @@ class Parse:
         :param text:
         :return:
         """
-        text_tokens = word_tokenize(text)
+        # text_tokens = word_tokenize(text)
+        # text_tokens = TweetTokenizer().tokenize(text)
+        text_tokens = WhitespaceTokenizer().tokenize(text)
         text_tokens_without_stopwords = [w.lower() for w in text_tokens if w not in self.stop_words]
+
         return text_tokens_without_stopwords
 
     def parse_doc(self, doc_as_list):
@@ -46,3 +51,4 @@ class Parse:
         document = Document(tweet_id, tweet_date, full_text, url, retweet_text, retweet_url, quote_text,
                             quote_url, term_dict, doc_length)
         return document
+
