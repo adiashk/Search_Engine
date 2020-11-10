@@ -18,9 +18,11 @@ class Parse:
         """
         # text_tokens = word_tokenize(text)
         # text_tokens = TweetTokenizer().tokenize(text)
+        text+=" 123 Thousand"
         text_tokens = WhitespaceTokenizer().tokenize(text)
         text_tokens_without_stopwords = [w.lower() for w in text_tokens if w not in self.stop_words]
-
+        self.covert_percent(text_tokens_without_stopwords)  # replace: Number percent To Number%
+        self.convert_numbers(text_tokens_without_stopwords)
         return text_tokens_without_stopwords
 
     def parse_doc(self, doc_as_list):
@@ -52,3 +54,41 @@ class Parse:
                             quote_url, term_dict, doc_length)
         return document
 
+    def covert_percent(self, words_list):
+        self.replace_word_to_sign("percent", "%", words_list)
+        self.replace_word_to_sign("percentage", "%", words_list)
+        # self.replace_word_to_sign("mask", "%", words_list)
+
+    def replace_word_to_sign(self, word, sign, words_list):
+        while word in words_list:
+            index = words_list.index(word)
+            words_list[index - 1] = words_list[index - 1] + sign
+            words_list.remove(word)
+
+    def convert_numbers(self, words_list):
+        self.replace_word_to_sign("thousand", "K", words_list)
+        self.replace_word_to_sign("million", "M", words_list)
+        self.replace_word_to_sign("Billion", "B", words_list)
+        # find_comma()
+        for i, word in enumerate(words_list):
+            if word.isdigit():
+                number = int(word)
+                if number < 1000: continue
+                elif 1000 <= number < 1000000:
+                    new_num = str.format("{0:.3f}", number/1000)  # use 3 digits of precision and float-formatting.
+                    words_list[i] = new_num + "K"
+                elif 1000000 <= number < 1000000000:
+                    new_num = str.format("{0:.3f}", number/1000000)  # use 3 digits of precision and float-formatting.
+                    words_list[i] = new_num + "M"
+                elif 1000000000 <= number:
+                    new_num = str.format("{0:.3f}", number/1000000000)  # use 3 digits of precision and float-formatting.
+                    words_list[i] = new_num + "B"
+
+    # def find_comma(self, text_tokens):
+    #     number = [s for s in text_tokens if "," in s]
+    #     split_urls = []
+    #     # word = []
+    #     for h in url:
+    #         # word = self.split_hashtag(h)
+    #         split_urls.extend(self.split_url(h))
+    #     return split_urls
