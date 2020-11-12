@@ -4,16 +4,6 @@ from document import Document
 from nltk.tokenize import WhitespaceTokenizer
 import re
 
-
-
-#return pattern.findall(tag)
-
-
-# def split_hashtag(word):
-#     expanded = " ".join([word for a in re.split('([A-Z][a-z]+)') if a])
-#     return expanded
-
-
 class Parse:
 
     def __init__(self):
@@ -26,6 +16,7 @@ class Parse:
         :return:
         """
         #text_tokens = word_tokenize(text)
+        text = re.sub('(?<=\D)[.,]|[.,](?=\D)', '', text)
         text_tokens = WhitespaceTokenizer().tokenize(text)
         # hashtags
         split_hash = self.find_hashtags(text_tokens)
@@ -70,8 +61,13 @@ class Parse:
                             quote_url, term_dict, doc_length)
         return document
 
-    def split_hashtag(self, tag):
-        pattern = re.compile(r"[A-Z][a-z]+|\d+|[A-Z]+(?![a-z])")
+    def split_hashtag(tag):
+        tag = tag.replace('#', '')
+        if "_" in tag:
+            return tag.split("_")
+
+        pattern = re.compile(r"[a-z]+|[A-Z][a-z]+|\d+|[A-Z]+(?![a-z])")
+
         return pattern.findall(tag)
 
     def find_hashtags(self, text_tokens):
