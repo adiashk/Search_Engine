@@ -18,11 +18,14 @@ class Parse:
         """
         # text_tokens = word_tokenize(text)
         # text_tokens = TweetTokenizer().tokenize(text)
-        text+=" 123 Thousand"
+        text += " 123 Thousand"
+        # text += " 123 percentage"
+        # text += " 10,123"
+        # text += " 1010.56"
+        # text += " 10.56"
+        # text += " 35 3/4"
         text_tokens = WhitespaceTokenizer().tokenize(text)
         text_tokens_without_stopwords = [w.lower() for w in text_tokens if w not in self.stop_words]
-        self.covert_percent(text_tokens_without_stopwords)  # replace: Number percent To Number%
-        self.convert_numbers(text_tokens_without_stopwords)
         return text_tokens_without_stopwords
 
     def parse_doc(self, doc_as_list):
@@ -40,11 +43,19 @@ class Parse:
         quote_text = doc_as_list[6]
         quote_url = doc_as_list[7]
         term_dict = {}
+        # if tweet_id == "1280966288295317504":
+        #     c = "f"
         tokenized_text = self.parse_sentence(full_text)
 
         doc_length = len(tokenized_text)  # after text operations.
 
-        for term in tokenized_text:
+        # for term in tokenized_text:  # enumerate---------------->
+        for index, term in enumerate(tokenized_text):
+
+            # roles:
+            self.covert_percent(index, term, tokenized_text)  # replace: Number percent To Number%
+            self.convert_numbers(index, term, tokenized_text)
+
             if term not in term_dict.keys():
                 term_dict[term] = 1
             else:
@@ -54,41 +65,46 @@ class Parse:
                             quote_url, term_dict, doc_length)
         return document
 
-    def covert_percent(self, words_list):
-        self.replace_word_to_sign("percent", "%", words_list)
-        self.replace_word_to_sign("percentage", "%", words_list)
-        # self.replace_word_to_sign("mask", "%", words_list)
+    def covert_percent(self, index, term, tokenized_text):
+        if term == "percent" or term == "percentage":
+            self.check_number_before_sign_and_replace_word(term, tokenized_text, "%")
 
-    def replace_word_to_sign(self, word, sign, words_list):
-        while word in words_list:
-            index = words_list.index(word)
-            words_list[index - 1] = words_list[index - 1] + sign
-            words_list.remove(word)
+    def check_number_before_sign_and_replace_word(self, index, term, tokenized_text, sign):
+        # index = tokenized_text.index(term)
+        if tokenized_text[index - 1].isdigit():  # number_before_sign
+            tokenized_text[index - 1] += sign  # replace_word
+            del tokenized_text[index]
 
-    def convert_numbers(self, words_list):
-        self.replace_word_to_sign("thousand", "K", words_list)
-        self.replace_word_to_sign("million", "M", words_list)
-        self.replace_word_to_sign("Billion", "B", words_list)
-        # find_comma()
-        for i, word in enumerate(words_list):
-            if word.isdigit():
-                number = int(word)
-                if number < 1000: continue
-                elif 1000 <= number < 1000000:
-                    new_num = str.format("{0:.3f}", number/1000)  # use 3 digits of precision and float-formatting.
-                    words_list[i] = new_num + "K"
-                elif 1000000 <= number < 1000000000:
-                    new_num = str.format("{0:.3f}", number/1000000)  # use 3 digits of precision and float-formatting.
-                    words_list[i] = new_num + "M"
-                elif 1000000000 <= number:
-                    new_num = str.format("{0:.3f}", number/1000000000)  # use 3 digits of precision and float-formatting.
-                    words_list[i] = new_num + "B"
+    # def replace_word_to_sign(self, word, sign, words_list):
+    #     # add if this id number
+    #     while word in words_list:
+    #         index = words_list.index(word)
+    #         words_list[index - 1] = words_list[index - 1] + sign
+    #         words_list.remove(word)
 
-    # def find_comma(self, text_tokens):
-    #     number = [s for s in text_tokens if "," in s]
-    #     split_urls = []
-    #     # word = []
-    #     for h in url:
-    #         # word = self.split_hashtag(h)
-    #         split_urls.extend(self.split_url(h))
-    #     return split_urls
+    def convert_numbers(self, index, term, tokenized_text):
+        if term == "thousand":
+            self.check_number_before_sign_and_replace_word(index, term, tokenized_text, "K")
+        if term == "million":
+            self.check_number_before_sign_and_replace_word(index, term, tokenized_text, "M")
+        if term == "billion":
+            self.check_number_before_sign_and_replace_word(index, term, tokenized_text, "B")
+        if term[0].isdigit():
+            term = term.replace(',', '', 1)
+            try:
+                number = int(float(term))
+            except:
+                if '/' in term:
+                    if tokenized_text[index - 1].isdigit():  # number_before_sign
+                        tokenized_text[index - 1] += " " + tokenized_text[index]  # replace_word
+                        del tokenized_text[index]
+                return
+            if 1000 <= number < 1000000:
+                new_num = round(number / 1000, 3)  # keep 3 digits
+                tokenized_text[index] = str(new_num) + "K"
+            elif 1000000 <= number < 1000000000:
+                new_num = round(number / 1000000, 3)
+                tokenized_text[index] = str(new_num) + "M"
+            elif 1000000000 <= number:
+                new_num = round(number / 1000000000, 3)
+                tokenized_text[index] = str(new_num) + "B"
