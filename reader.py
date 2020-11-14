@@ -18,3 +18,11 @@ class ReadFile:
         return df.values.tolist()
 
 
+# from dataclasses import dataclass
+#
+#
+# @dataclass
+# class doc:
+#     a = 1
+#     b = None
+#     c = None

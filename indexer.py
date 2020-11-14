@@ -19,9 +19,28 @@ class Indexer:
             try:
                 # Update inverted index and posting
                 if term not in self.inverted_idx.keys():
-                    self.inverted_idx[term] = 1
-                    self.postingDict[term] = []
-                else:
+                    if term[0].isupper():
+                        if term.lower() in self .inverted_idx.keys():  # this is upper and there was lower before -> insert as lower
+                            term = term.lower()
+                            self.inverted_idx[term] += 1
+                        else:   # this is upper and there wad noting before -> insert as upper
+                            self.inverted_idx[term] = 1
+                            self.postingDict[term] = []
+
+                    elif term[0].islower(): # this is lower and there wad upper before -> insert as lower and move what was at upper
+                        if term.capitalize() in self.inverted_idx.keys():
+                            self.inverted_idx[term] = self.inverted_idx[term.capitalize()] + 1
+                            self.postingDict[term] = self.postingDict[term.capitalize()]
+                            del self.inverted_idx[term.capitalize()]
+                            del self.postingDict[term.capitalize()]
+
+                        else:  # this is lower and there wad noting before -> insert as lower
+                            self.inverted_idx[term] = 1
+                            self.postingDict[term] = []
+                    else:
+                        self.inverted_idx[term] = 1
+                        self.postingDict[term] = []
+                else:  # term was in before in the same way
                     self.inverted_idx[term] += 1
 
                 self.postingDict[term].append((document.tweet_id, document_dictionary[term]))

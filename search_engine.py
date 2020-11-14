@@ -18,7 +18,8 @@ def run_engine():
     p = Parse()
     indexer = Indexer(config)
 
-    documents_list = r.read_file(file_name='sample3.parquet')
+    documents_list = r.read_file(
+        file_name='sample3.parquet')  # TODO - handel all files ~50 (can do with from multiprocessing.pool import ThreadPool)
     # Iterate over every document in the file
     for idx, document in enumerate(documents_list):
         # parse the document
@@ -30,6 +31,7 @@ def run_engine():
 
     utils.save_obj(indexer.inverted_idx, "inverted_idx")
     utils.save_obj(indexer.postingDict, "posting")
+
 
 
 def load_index():
