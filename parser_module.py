@@ -15,7 +15,6 @@ class Parse:
     def __init__(self):
         self.stop_words = stopwords.words('english')
 
-
     def parse_sentence(self, text):
         """
         This function tokenize, remove stop words and apply lower case for every word within the text
@@ -50,7 +49,7 @@ class Parse:
         """
         tweet_id = doc_as_list[0]
         tweet_date = doc_as_list[1]
-        full_text = doc_as_list[2] + " Long Island"
+        full_text = doc_as_list[2]
         url = doc_as_list[3]
         retweet_text = doc_as_list[4]
         retweet_url = doc_as_list[5]
@@ -76,8 +75,56 @@ class Parse:
                 term_dict[term] += 1
 
         document = Document(tweet_id, tweet_date, full_text, url, retweet_text, retweet_url, quote_text,
-                            quote_url, term_dict, doc_length, named_entity)
+                            quote_url, term_dict, doc_length)
         return document
+
+    def split_hashtag(self, tag):
+        tag = tag.replace('#', '')
+        if "_" in tag:
+            return tag.split("_")
+
+        pattern = re.compile(r"[a-z]+|[A-Z][a-z]+|\d+|[A-Z]+(?![a-z])")
+
+        return pattern.findall(tag)
+
+    def find_hashtags(self, text_tokens):
+        hashtags = [s for s in text_tokens if "#" in s]
+        split_hashtags = []
+        # word = []
+        for h in hashtags:
+            # word = self.split_hashtag(h)
+            split_hashtags.extend(self.split_hashtag(h))
+        return split_hashtags
+
+    # def split_url(self, tag):
+    #     # pattern = re.compile(r'[\:/?=\-&]+',re.UNICODE)
+    #     # return pattern.findall(tag)
+    #     return re.compile(r'[\:/?=\-&]+', re.UNICODE).split(tag)
+
+    def split_url(self, tag):
+        # pattern = re.compile(r'[\:/?=\-&]+', re.UNICODE)
+        # return pattern.findall(self, tag)
+        if "www." in tag:
+            # tag = tag.replace('www.', '')
+            tag = tag.replace('www.', '')
+            pattern = re.compile(r'[\:/?=\-&]', re.UNICODE).split(tag)
+            pattern += ["www"]
+            return pattern
+        return re.compile(r'[\:/?=\-&]', re.UNICODE).split(tag)
+
+    def find_url(self, text_tokens):
+        url = [s for s in text_tokens if "http" in s]
+        split_urls = []
+        # word = []
+        for h in url:
+            # word = self.split_hashtag(h)
+            split_urls.extend(self.split_url(h))
+        return split_urls
+
+    def remove_url_from_token(self, text_tokens):
+        text_tokens = [x for x in text_tokens if "http" not in x]
+        return text_tokens
+
 
     def covert_percent(self, index, term, tokenized_text):
         if term.lower() == "percent" or term.lower() == "percentage":
