@@ -4,6 +4,7 @@ from document import Document
 from nltk.tokenize import WhitespaceTokenizer
 import re
 
+
 class Parse:
 
     def __init__(self):
@@ -21,13 +22,13 @@ class Parse:
         # hashtags
         split_hash = self.find_hashtags(text_tokens)
         # url
-        split_url = self.find_url(text_tokens)
+        # split_url = self.find_url(text_tokens)
         # remove origin urls:
-        text_tokens = self.remove_url_from_token(text_tokens)
+        # text_tokens = self.remove_url_from_token(text_tokens)
         # extend
         text_tokens.extend(split_hash)
 
-        text_tokens.extend(split_url)
+        # text_tokens.extend(split_url)
         # lower&stopwords
         text_tokens_without_stopwords = [w.lower() for w in text_tokens if w not in self.stop_words]
         return text_tokens_without_stopwords
@@ -48,6 +49,7 @@ class Parse:
         quote_url = doc_as_list[7]
         term_dict = {}
         tokenized_text = self.parse_sentence(full_text)
+        # tokenized_text = self.parse_sentence(url)
 
         doc_length = len(tokenized_text)  # after text operations.
 
@@ -61,7 +63,7 @@ class Parse:
                             quote_url, term_dict, doc_length)
         return document
 
-    def split_hashtag(tag):
+    def split_hashtag(self, tag):
         tag = tag.replace('#', '')
         if "_" in tag:
             return tag.split("_")
@@ -79,10 +81,21 @@ class Parse:
             split_hashtags.extend(self.split_hashtag(h))
         return split_hashtags
 
+    # def split_url(self, tag):
+    #     # pattern = re.compile(r'[\:/?=\-&]+',re.UNICODE)
+    #     # return pattern.findall(tag)
+    #     return re.compile(r'[\:/?=\-&]+', re.UNICODE).split(tag)
+
     def split_url(self, tag):
-        # pattern = re.compile(r'[\:/?=\-&]+',re.UNICODE)
-        # return pattern.findall(tag)
-        return re.compile(r'[\:/?=\-&]+', re.UNICODE).split(tag)
+        # pattern = re.compile(r'[\:/?=\-&]+', re.UNICODE)
+        # return pattern.findall(self, tag)
+        if "www." in tag:
+            # tag = tag.replace('www.', '')
+            tag = tag.replace('www.', '')
+            pattern = re.compile(r'[\:/?=\-&]', re.UNICODE).split(tag)
+            pattern += ["www"]
+            return pattern
+        return re.compile(r'[\:/?=\-&]', re.UNICODE).split(tag)
 
     def find_url(self, text_tokens):
         url = [s for s in text_tokens if "http" in s]
@@ -96,3 +109,4 @@ class Parse:
     def remove_url_from_token(self, text_tokens):
         text_tokens = [x for x in text_tokens if "http" not in x]
         return text_tokens
+
