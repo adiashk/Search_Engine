@@ -7,8 +7,7 @@ import re
 import utils
 import spacy
 from collections import Counter
-
-
+from nltk.stem import PorterStemmer
 
 class Parse:
 
@@ -23,7 +22,7 @@ class Parse:
         """
         # text_tokens = word_tokenize(text)
         # text_tokens = TweetTokenizer().tokenize(text)
-        text += " 123 Thousand bdjsnsa mdjas"
+        # text += " 123 Thousand bdjsnsa mdjas"
         # text += " 123 percentage"
         # text += " 10,123"
         # text += " 1010.56"
@@ -38,7 +37,10 @@ class Parse:
 
         # text_tokens_without_stopwords = [w.lower() for w in text_tokens if w not in self.stop_words]
         text_tokens_without_stopwords = [w for w in text_tokens if w not in self.stop_words]
-
+        seeming_tokens = []
+        ps = PorterStemmer()
+        for w in text_tokens_without_stopwords:
+            seeming_tokens.append(ps.stem(w))
         return text_tokens_without_stopwords
 
     def parse_doc(self, doc_as_list):
