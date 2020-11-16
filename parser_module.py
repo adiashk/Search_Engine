@@ -5,14 +5,16 @@ from nltk.tokenize import TweetTokenizer
 from document import Document
 import re
 import utils
+import spacy
+from collections import Counter
+
 
 
 class Parse:
 
     def __init__(self):
         self.stop_words = stopwords.words('english')
-        self.capital_letters_list = set()
-        self.names_list = set()
+
 
     def parse_sentence(self, text):
         """
@@ -22,7 +24,7 @@ class Parse:
         """
         # text_tokens = word_tokenize(text)
         # text_tokens = TweetTokenizer().tokenize(text)
-        # text += " 123 Thousand"
+        text += " 123 Thousand bdjsnsa mdjas"
         # text += " 123 percentage"
         # text += " 10,123"
         # text += " 1010.56"
@@ -34,17 +36,6 @@ class Parse:
         # text += " hello"
         text = re.sub('(?<=\D)[.,]|[.,](?=\D)', '', text)
         text_tokens = WhitespaceTokenizer().tokenize(text)
-        # text_tokens_without_stopwords = []
-        # for term in text_tokens:
-        #     if term not in self.stop_words:
-        #         if term[0].isupper():
-        #             self.capital_letters_list.add(term)  # capital letters
-        #             self.names_list.add(term)  # names
-        #     text_tokens_without_stopwords.append(term.lower())
-
-        # utils.save_obj(self.capital_letters_list, "capital_letters_list")  # write the capital letters to file
-        # utils.save_obj(self.names_list, "names_list")  # write the capital letters to file
-        # capital_letters_list_check = utils.load_obj("capital_letters_list")
 
         # text_tokens_without_stopwords = [w.lower() for w in text_tokens if w not in self.stop_words]
         text_tokens_without_stopwords = [w for w in text_tokens if w not in self.stop_words]
@@ -59,21 +50,22 @@ class Parse:
         """
         tweet_id = doc_as_list[0]
         tweet_date = doc_as_list[1]
-        full_text = doc_as_list[2]
+        full_text = doc_as_list[2] + " Long Island"
         url = doc_as_list[3]
         retweet_text = doc_as_list[4]
         retweet_url = doc_as_list[5]
         quote_text = doc_as_list[6]
         quote_url = doc_as_list[7]
         term_dict = {}
-        # if tweet_id == "1280966288295317504":
-        #     c = "f"
+        named_entity = self.Named_Entity_Recognition(full_text)
         tokenized_text = self.parse_sentence(full_text)
 
         doc_length = len(tokenized_text)  # after text operations.
 
         # for term in tokenized_text:  # enumerate---------------->
-        for index, term in enumerate(tokenized_text):
+        tokenized_text_len = len(tokenized_text)
+        for i, term in enumerate(reversed(tokenized_text)):
+            index = tokenized_text_len - 1 - i
             # roles:
             self.covert_percent(index, term, tokenized_text)  # replace: Number percent To Number%
             self.convert_numbers(index, term, tokenized_text)
@@ -84,7 +76,7 @@ class Parse:
                 term_dict[term] += 1
 
         document = Document(tweet_id, tweet_date, full_text, url, retweet_text, retweet_url, quote_text,
-                            quote_url, term_dict, doc_length)
+                            quote_url, term_dict, doc_length, named_entity)
         return document
 
     def covert_percent(self, index, term, tokenized_text):
@@ -128,3 +120,19 @@ class Parse:
             elif 1000000000 <= number:
                 new_num = round(number / 1000000000, 3)
                 tokenized_text[index] = str(new_num) + "B"
+
+    def Named_Entity_Recognition(self, text):
+        sp = spacy.load('en_core_web_sm')
+        sen = sp(text)
+        # sen = sp(u'Manchester United is looking to sign Harry Kane for $90 million in Manchester United')
+        named_entity = []
+        for name in list(sen.ents):
+            named_entity.append(str(name))
+        counter_names = Counter(named_entity)
+        return counter_names
+        # for entity in sen.ents:
+        #     print(entity.text + ' - ' + entity.label_ + ' - ' + str(spacy.explain(entity.label_)))
+
+
+
+

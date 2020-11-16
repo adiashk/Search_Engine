@@ -1,8 +1,11 @@
+from collections import defaultdict
+
 class Indexer:
 
     def __init__(self, config):
-        self.inverted_idx = {}
-        self.postingDict = {}
+        self.inverted_idx = defaultdict(int)
+        self.postingDict = defaultdict(list)
+        self.named_entity_idx = defaultdict(list)
         self.config = config
 
     def add_new_doc(self, document):
@@ -47,3 +50,15 @@ class Indexer:
 
             except:
                 print('problem with the following key {}'.format(term[0]))
+        self.add_named_entity(document)
+
+    def add_named_entity(self, document):
+        document_named_entity = document.named_entity
+        for name in document_named_entity:
+            if name in self.named_entity_idx.keys():  # recognize as named_entity before
+                self.inverted_idx[name] += 1
+                self.postingDict[name].append((document.tweet_id, document_named_entity[name]))
+                self.postingDict[name].append(self.named_entity_idx[name])
+
+            else: # new possible entity
+                self.named_entity_idx[name].append((document.tweet_id, document_named_entity[name]))
