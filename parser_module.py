@@ -69,6 +69,7 @@ class Parse:
             index = tokenized_text_len - 1 - i
             # roles:
             self.covert_percent(index, term, tokenized_text)  # replace: Number percent To Number%
+            self.covert_dollars(index, term, tokenized_text)  # replace: Number percent To Number%
             self.convert_numbers(index, term, tokenized_text)
 
             if term not in term_dict.keys():
@@ -131,6 +132,11 @@ class Parse:
     def covert_percent(self, index, term, tokenized_text):
         if term.lower() == "percent" or term.lower() == "percentage":
             self.check_number_before_sign_and_replace_word(index, tokenized_text, "%")
+
+
+    def covert_dollars(self, index, term, tokenized_text):
+        if term.lower() == "dollar" or term.lower() == "dollars":
+            self.check_number_before_sign_and_replace_word(index, tokenized_text, "$")
 
     def check_number_before_sign_and_replace_word(self, index, tokenized_text, sign):
         if tokenized_text[index - 1].isdigit():  # number_before_sign
