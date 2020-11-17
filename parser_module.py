@@ -58,20 +58,31 @@ class Parse:
         quote_text = doc_as_list[6]
         quote_url = doc_as_list[7]
         term_dict = {}
-        named_entity = self.Named_Entity_Recognition(full_text)
+        # named_entity = self.Named_Entity_Recognition(full_text)
         tokenized_text = self.parse_sentence(full_text)
 
         doc_length = len(tokenized_text)  # after text operations.
 
         # for term in tokenized_text:  # enumerate---------------->
         tokenized_text_len = len(tokenized_text)
+        temp_split_url = self.convert_full_url(url)
+        # tokenized_text.extend(temp_split_url)
         for i, term in enumerate(reversed(tokenized_text)):
             index = tokenized_text_len - 1 - i
             # roles:
             self.covert_percent(index, term, tokenized_text)  # replace: Number percent To Number%
             self.covert_dollars(index, term, tokenized_text)  # replace: Number percent To Number%
             self.convert_numbers(index, term, tokenized_text)
+            self.convert_hashtag(index, term, tokenized_text)
+            temp_split_url = self.convert_url(index, term, temp_split_url, tokenized_text)
 
+            if term not in term_dict.keys():
+                term_dict[term] = 1
+            else:
+                term_dict[term] += 1
+
+        # insert merge url token
+        for term in temp_split_url:
             if term not in term_dict.keys():
                 term_dict[term] = 1
             else:
@@ -81,14 +92,19 @@ class Parse:
                             quote_url, term_dict, doc_length)
         return document
 
+    def convert_hashtag(self, index, term, tokenized_text):
+        if "#" in term:
+            tokenized_text.extend(self.split_hashtag(term))
+
+
     def split_hashtag(self, tag):
         tag = tag.replace('#', '')
         if "_" in tag:
-            return tag.split("_")
-
-        pattern = re.compile(r"[a-z]+|[A-Z][a-z]+|\d+|[A-Z]+(?![a-z])")
-
-        return pattern.findall(tag)
+            pattern = tag.split("_")
+        else:
+            pattern = re.compile(r"[a-z]+|[A-Z][a-z]+|\d+|[A-Z]+(?![a-z])").findall(tag)
+        pattern = [i for i in pattern if i]
+        return pattern
 
     def find_hashtags(self, text_tokens):
         hashtags = [s for s in text_tokens if "#" in s]
@@ -99,21 +115,44 @@ class Parse:
             split_hashtags.extend(self.split_hashtag(h))
         return split_hashtags
 
-    # def split_url(self, tag):
-    #     # pattern = re.compile(r'[\:/?=\-&]+',re.UNICODE)
-    #     # return pattern.findall(tag)
-    #     return re.compile(r'[\:/?=\-&]+', re.UNICODE).split(tag)
+    def convert_full_url(self, url):
+        if url != "[]":
+            url = url.replace("[", "")
+            url = url.replace("]", "")
+            url = url.split(",")
+            tempSplitURL = []
+            for u in url:
+                tempSplitURL.extend(self.split_url(u))
+            tempSplitURL = set(tempSplitURL)
+            return list(tempSplitURL)
+        else:
+            return []
+
+    def convert_url(self, index, term, temp_split_url, tokenized_text):
+        if "http" in term:
+            urlstokens = self.split_url(term)
+            temp_split_url.extend(urlstokens)
+            temp_split_url = set(temp_split_url)
+            temp_split_url = list(temp_split_url)
+            del tokenized_text[index]
+        return temp_split_url
+
 
     def split_url(self, tag):
         # pattern = re.compile(r'[\:/?=\-&]+', re.UNICODE)
         # return pattern.findall(self, tag)
+        pattern = []
         if "www." in tag:
             # tag = tag.replace('www.', '')
             tag = tag.replace('www.', '')
-            pattern = re.compile(r'[\:/?=\-&]', re.UNICODE).split(tag)
+            pattern = re.compile(r'[\//\:/?=\-&]', re.UNICODE).split(tag)
             pattern += ["www"]
-            return pattern
-        return re.compile(r'[\:/?=\-&]', re.UNICODE).split(tag)
+        else:
+            pattern = re.compile(r'[\:/?=\-&]', re.UNICODE).split(tag)
+        # pattern.remove('')
+        # pattern.remove('')
+        pattern = [i for i in pattern if i]
+        return pattern
 
     def find_url(self, text_tokens):
         url = [s for s in text_tokens if "http" in s]
@@ -187,6 +226,10 @@ class Parse:
         return counter_names
         # for entity in sen.ents:
         #     print(entity.text + ' - ' + entity.label_ + ' - ' + str(spacy.explain(entity.label_)))
+
+
+
+
 
 
 
