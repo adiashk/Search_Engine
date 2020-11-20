@@ -67,13 +67,14 @@ class Parse:
         tokenized_text_len = len(tokenized_text)
         temp_split_url = self.convert_full_url(url)
         # tokenized_text.extend(temp_split_url)
+        temp_split_hashtag = []
         for i, term in enumerate(reversed(tokenized_text)):
             index = tokenized_text_len - 1 - i
             # roles:
             self.covert_percent(index, term, tokenized_text)  # replace: Number percent To Number%
             self.covert_dollars(index, term, tokenized_text)  # replace: Number percent To Number%
             self.convert_numbers(index, term, tokenized_text)
-            self.convert_hashtag(index, term, tokenized_text)
+            temp_split_hashtag, skip = self.convert_hashtag(term, skip, temp_split_hashtag)
             temp_split_url = self.convert_url(index, term, temp_split_url, tokenized_text)
 
             if term not in term_dict.keys():
@@ -92,18 +93,36 @@ class Parse:
                             quote_url, term_dict, doc_length)
         return document
 
-    def convert_hashtag(self, index, term, tokenized_text):
+    def convert_hashtag(self, term, skip, temp_split_hashtag):
         if "#" in term:
-            tokenized_text.extend(self.split_hashtag(term))
-
+            return temp_split_hashtag.extend(self.split_hashtag(term)), skip
 
     def split_hashtag(self, tag):
+        temp_tag = tag
         tag = tag.replace('#', '')
-        if "_" in tag:
+        if "_" in tag:#we_are->we are
             pattern = tag.split("_")
+            new_pattern = []
+            for i in pattern:
+                i = i.lower
+                new_pattern += re.compile(r"[a-z]+|[A-Z][a-z]+|\d+|[A-Z]+(?![a-z])").findall(tag)
+            new_term = tag.replace('_', ' ') # #let_it_be -> let it be
+            new_term = new_term.lower
+            new_term = new_term.join(new_pattern)
+            new_term = "#"
+            new_term = new_term.join(new_pattern)
+            new_pattern = new_pattern.append(new_term)
+            temp_tag = temp_tag.replace('_', '')
+            temp_tag = temp_tag.lower
+            pattern = new_pattern.append(temp_tag)
+
         else:
             pattern = re.compile(r"[a-z]+|[A-Z][a-z]+|\d+|[A-Z]+(?![a-z])").findall(tag)
+            new_term_tag = ""
+            new_term_tag = new_term_tag.join(pattern) # #letItBe->letItBe
+            pattern = pattern.append(new_term_tag)
         pattern = [i for i in pattern if i]
+        pattern = [i for i in pattern if i.lower not in self.stop_words]
         return pattern
 
     def find_hashtags(self, text_tokens):
@@ -149,9 +168,8 @@ class Parse:
             pattern += ["www"]
         else:
             pattern = re.compile(r'[\:/?=\-&]', re.UNICODE).split(tag)
-        # pattern.remove('')
-        # pattern.remove('')
         pattern = [i for i in pattern if i]
+        pattern = [i for i in pattern if i.lower not in self.stop_words]
         return pattern
 
     def find_url(self, text_tokens):
