@@ -9,6 +9,7 @@ import spacy
 from collections import Counter
 from nltk.stem import PorterStemmer
 
+
 class Parse:
 
     def __init__(self, stemming):
@@ -24,8 +25,8 @@ class Parse:
         # text_tokens = word_tokenize(text)
         # text_tokens = TweetTokenizer().tokenize(text)
         text = re.sub('(?<=\D)[.,]|[.,](?=\D)', '', text)
-        text_tokens = WhitespaceTokenizer().tokenize(text)
-
+        # text_tokens = WhitespaceTokenizer().tokenize(text)
+        text_tokens = text.split(" ")
         # text_tokens_without_stopwords = [w.lower() for w in text_tokens if w not in self.stop_words]
         text_tokens_without_stopwords = [w for w in text_tokens if w not in self.stop_words]
 
@@ -53,10 +54,10 @@ class Parse:
 
         # for term in tokenized_text:  # enumerate---------------->
         tokenized_text_len = len(tokenized_text)
+        temp_split_url = []
         temp_split_url = self.convert_full_url(url)  # get list of terms from URL
-        skip = False
-        # for index, term in enumerate(tokenized_text):
-
+        skip = 0
+        temp_split_hashtag = []
         index = 0
         while index < len(tokenized_text):
             term = tokenized_text[index]
@@ -65,21 +66,25 @@ class Parse:
 
             # roles :
             term, skip = self.convert_numbers(index, term, tokenized_text)
-            self.convert_hashtag(index, term, tokenized_text)
-            temp_split_url = self.convert_url(index, term, temp_split_url, tokenized_text)  # create set of terms from URL & full text
+            temp_split_hashtag, to_delete_Hash = self.convert_hashtag(term, temp_split_hashtag)
+            temp_split_url, to_delete_URL = self.convert_url(term, temp_split_url)  # create set of terms from URL or full text
 
             if self.stemming:
                 term = self.convert_stemming(term)
+            if not to_delete_Hash and not to_delete_URL:
+                if term not in term_dict.keys():
+                    term_dict[term] = 1
+                else:
+                    term_dict[term] += 1
 
+            index += (skip + 1)
+
+        for term in temp_split_hashtag:
             if term not in term_dict.keys():
                 term_dict[term] = 1
             else:
                 term_dict[term] += 1
 
-            index += (skip + 1)
-
-
-        # insert merge url token
         for term in temp_split_url:
             if term not in term_dict.keys():
                 term_dict[term] = 1
@@ -90,24 +95,45 @@ class Parse:
         # tok_dict = Counter(tokenized_text)
         # term_dict = dict(tok_dict)
 
-
-
         document = Document(tweet_id, tweet_date, full_text, url, retweet_text, retweet_url, quote_text,
                             quote_url, term_dict, doc_length, named_entity)
         return document
 
-    def convert_hashtag(self, index, term, tokenized_text):
+    def convert_hashtag(self, term, temp_split_hashtag):
         if "#" in term:
-            tokenized_text.extend(self.split_hashtag(term))
-
+            split_hashtag = self.split_hashtag(term)
+            temp_split_hashtag.extend(split_hashtag)
+            return temp_split_hashtag, True
+        return temp_split_hashtag, False
 
     def split_hashtag(self, tag):
+        temp_tag = tag
+        pattern = []
         tag = tag.replace('#', '')
-        if "_" in tag:
+        if "_" in tag:  # we_are -> we are
             pattern = tag.split("_")
+            new_pattern = []
+            for i in pattern:
+                new_pattern.extend(re.compile(r"[a-z]+|[A-Z][a-z]+|\d+|[A-Z]+(?![a-z])").findall(i))
+            new_term_tag = " "
+            new_term_tag = new_term_tag.join(new_pattern)  # #letItBe->let it be
+            new_term_tag = new_term_tag.lower()
+            new_pattern.append(new_term_tag)
+            new_term_tag = new_term_tag.replace(' ', '')
+            new_pattern.append("#"+new_term_tag.lower())  #  #letItBe-> #letitbe
+            pattern = []
+            pattern.extend(new_pattern)
+
         else:
             pattern = re.compile(r"[a-z]+|[A-Z][a-z]+|\d+|[A-Z]+(?![a-z])").findall(tag)
+            new_term_tag = " "
+            new_term_tag = new_term_tag.join(pattern)  # #letItBe->let it be
+            new_term_tag = new_term_tag.lower()
+            pattern.append(new_term_tag)
+            pattern.append("#"+tag.lower())  #  #letItBe-> #letitbe
+
         pattern = [i for i in pattern if i]
+        pattern = [i.lower() for i in pattern if i.lower() not in self.stop_words]
         return pattern
 
     def find_hashtags(self, text_tokens):
@@ -132,15 +158,18 @@ class Parse:
         else:
             return []
 
-    def convert_url(self, index, term, temp_split_url, tokenized_text):
+    def convert_url(self, term, temp_split_url):
         if "http" in term:
+            if len(temp_split_url) > 0:  #  there was long URL
+                return temp_split_url, True
+
             urlstokens = self.split_url(term)
             temp_split_url.extend(urlstokens)
             temp_split_url = set(temp_split_url)
             temp_split_url = list(temp_split_url)
-            del tokenized_text[index]
-        return temp_split_url
+            return temp_split_url, True
 
+        return temp_split_url, False
 
     def split_url(self, tag):
         # pattern = re.compile(r'[\:/?=\-&]+', re.UNICODE)
@@ -153,9 +182,8 @@ class Parse:
             pattern += ["www"]
         else:
             pattern = re.compile(r'[\:/?=\-&]', re.UNICODE).split(tag)
-        # pattern.remove('')
-        # pattern.remove('')
         pattern = [i for i in pattern if i]
+        pattern = [i for i in pattern if i.lower() not in self.stop_words]
         return pattern
 
     def find_url(self, text_tokens):
@@ -170,7 +198,6 @@ class Parse:
     def remove_url_from_token(self, text_tokens):
         text_tokens = [x for x in text_tokens if "http" not in x]
         return text_tokens
-
 
     # def covert_words(self, index, term, tokenized_text):
     #     if term.lower() == "percent" or term.lower() == "percentage":
@@ -248,14 +275,14 @@ class Parse:
                     float(term)  # decimal number
                     term, skip = self.convert_small_numbers(index, term, tokenized_text, skip)
                 except:  # sings
-                    if not term[len(term)-1].isdigit():
-                        sign = term[len(term)-1]
-                        term = term[0:len(term)-1]
+                    if not term[len(term) - 1].isdigit():
+                        sign = term[len(term) - 1]
+                        term = term[0:len(term) - 1]
                         term, skip = self.convert_big_numbers(index, term, tokenized_text, skip)
                         term, skip = self.convert_small_numbers(index, term, tokenized_text, skip)
                         term += sign
             #  unique words
-            if index < len(tokenized_text)-1:
+            if index < len(tokenized_text) - 1:
                 after_term = tokenized_text[index + 1 + skip]
                 if after_term.lower() == "percent" or after_term.lower() == "percentage":
                     term += '%'
@@ -274,7 +301,6 @@ class Parse:
                     skip += 1
 
         return term, skip
-
 
     def convert_big_numbers(self, index, term, tokenized_text, skip):  # get term that it only digits
         is_changed = False
@@ -301,7 +327,8 @@ class Parse:
                 term = str(new_num) + "B"
             is_changed = True
 
-        term, skip = self.convert_divided_numbers(index, term, tokenized_text, skip, is_changed)  # 2000 1/3 --> 2K skip in the 1/3
+        term, skip = self.convert_divided_numbers(index, term, tokenized_text, skip,
+                                                  is_changed)  # 2000 1/3 --> 2K skip in the 1/3
         return term, skip
 
     def convert_small_numbers(self, index, term, tokenized_text, skip):
@@ -322,7 +349,6 @@ class Parse:
                 skip += 1
         return term, skip
 
-
     def Named_Entity_Recognition(self, text):
         sp = spacy.load('en_core_web_sm')
         sen = sp(text)
@@ -336,16 +362,10 @@ class Parse:
         # for entity in sen.ents:
         #     print(entity.text + ' - ' + entity.label_ + ' - ' + str(spacy.explain(entity.label_)))
 
-
     def convert_stemming(self, term):
-        seeming_tokens = []
         ps = PorterStemmer()
         if term[0].isupper():
             term = ps.stem(term).upper()
         else:
             term = ps.stem(term)
         return term
-
-
-
-

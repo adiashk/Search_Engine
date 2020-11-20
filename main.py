@@ -1,7 +1,7 @@
 import search_engine
 
 
-corpus_path = None
+corpus_path = "C:\\Users\\ASUS\\Desktop\\files"
 output_path = None
 stemming = True
 queries = None
