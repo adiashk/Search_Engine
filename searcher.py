@@ -22,9 +22,9 @@ class Searcher:
         posting = utils.load_obj("posting")
         relevant_docs = {}
         for term in query:
-            try: # an example of checks that you have to do
+            try:  # an example of checks that you have to do
                 posting_doc = posting[term]
-                for doc_tuple in posting_doc:
+                for doc_tuple in posting_doc:  # list: [(tweet_id, amount_in_tweet), ...()]
                     doc = doc_tuple[0]
                     if doc not in relevant_docs.keys():
                         relevant_docs[doc] = 1

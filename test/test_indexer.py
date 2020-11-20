@@ -19,3 +19,5 @@ class TestIndexer:
         documents_list = r.read_file(file_name='sample3.parquet')
         # text1 = '@ampalombo I was going to my grandsons baseball games and the dumb F****s made a mask mandatory, are you kidding me'
         assert indexer.add_new_doc()
+
+        text= 'i wad born in 2019'
