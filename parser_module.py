@@ -8,6 +8,7 @@ import utils
 import spacy
 from collections import Counter
 from nltk.stem import PorterStemmer
+import json
 
 
 class Parse:
@@ -146,13 +147,11 @@ class Parse:
         return split_hashtags
 
     def convert_full_url(self, url):
-        if url != "[]":
-            url = url.replace("[", "")
-            url = url.replace("]", "")
-            url = url.split(",")
+        if url != "{}":
             tempSplitURL = []
+            url = json.loads(url)
             for u in url:
-                tempSplitURL.extend(self.split_url(u))
+                tempSplitURL.extend(self.split_url(url[u]))
             tempSplitURL = set(tempSplitURL)
             return list(tempSplitURL)
         else:
@@ -178,10 +177,10 @@ class Parse:
         if "www." in tag:
             # tag = tag.replace('www.', '')
             tag = tag.replace('www.', '')
-            pattern = re.compile(r'[\//\:/?=\-&]', re.UNICODE).split(tag)
+            pattern = re.compile(r'[\//\:/?=\-&+]', re.UNICODE).split(tag)
             pattern += ["www"]
         else:
-            pattern = re.compile(r'[\:/?=\-&]', re.UNICODE).split(tag)
+            pattern = re.compile(r'[\:/?=\-&+]', re.UNICODE).split(tag)
         pattern = [i for i in pattern if i]
         pattern = [i for i in pattern if i.lower() not in self.stop_words]
         return pattern
