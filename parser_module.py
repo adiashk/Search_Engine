@@ -1,3 +1,5 @@
+import json
+
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.tokenize import WhitespaceTokenizer
@@ -26,10 +28,11 @@ class Parse:
         # text_tokens = word_tokenize(text)
         # text_tokens = TweetTokenizer().tokenize(text)
         text = re.sub('(?<=\D)[.,]|[.,](?=\D)', '', text)
+        text = text.replace('\n', ' ')
         # text_tokens = WhitespaceTokenizer().tokenize(text)
         text_tokens = text.split(" ")
         # text_tokens_without_stopwords = [w.lower() for w in text_tokens if w not in self.stop_words]
-        text_tokens_without_stopwords = [w for w in text_tokens if w not in self.stop_words]
+        text_tokens_without_stopwords = [w for w in text_tokens if w not in self.stop_words and len(w) > 0]
 
         return text_tokens_without_stopwords
 
@@ -56,7 +59,7 @@ class Parse:
         # for term in tokenized_text:  # enumerate---------------->
         tokenized_text_len = len(tokenized_text)
         temp_split_url = []
-        temp_split_url = self.convert_full_url(url)  # get list of terms from URL
+  #      temp_split_url = self.convert_full_url(url)  # get list of terms from URL
         skip = 0
         temp_split_hashtag = []
         index = 0
@@ -68,11 +71,11 @@ class Parse:
             # roles :
             term, skip = self.convert_numbers(index, term, tokenized_text)
             temp_split_hashtag, to_delete_Hash = self.convert_hashtag(term, temp_split_hashtag)
-            temp_split_url, to_delete_URL = self.convert_url(term, temp_split_url)  # create set of terms from URL or full text
+         #   temp_split_url, to_delete_URL = self.convert_url(term, temp_split_url)  # create set of terms from URL or full text
 
             if self.stemming:
                 term = self.convert_stemming(term)
-            if not to_delete_Hash and not to_delete_URL:
+            if not to_delete_Hash: #and not to_delete_URL:
                 if term not in term_dict.keys():
                     term_dict[term] = 1
                 else:
@@ -276,10 +279,14 @@ class Parse:
                 except:  # sings
                     if not term[len(term) - 1].isdigit():
                         sign = term[len(term) - 1]
-                        term = term[0:len(term) - 1]
-                        term, skip = self.convert_big_numbers(index, term, tokenized_text, skip)
-                        term, skip = self.convert_small_numbers(index, term, tokenized_text, skip)
-                        term += sign
+                        if term[0:len(term) - 1].isdigit():  # no dots or signs
+                            term = term[0:len(term) - 1]
+                            new_term, skip = self.convert_big_numbers(index, term, tokenized_text, skip)
+                            if new_term == term:
+                                term, skip = self.convert_small_numbers(index, term, tokenized_text, skip)
+                            else:
+                                term = new_term
+                            term += sign
             #  unique words
             if index < len(tokenized_text) - 1:
                 after_term = tokenized_text[index + 1 + skip]
@@ -343,9 +350,13 @@ class Parse:
         if index < len(tokenized_text) - 1:
             after_term = tokenized_text[index + 1]
             if '/' in after_term:
-                if not is_big:
-                    term += ' ' + after_term
-                skip += 1
+                slash_index = after_term.index('/')
+                if after_term[slash_index-1] is not None and after_term[slash_index + 1] is not None:
+                    if after_term[slash_index-1].isdigit():
+                        if after_term[slash_index + 1].isdigit():
+                            if not is_big:
+                                term += ' ' + after_term
+                            skip += 1
         return term, skip
 
     def Named_Entity_Recognition(self, text):

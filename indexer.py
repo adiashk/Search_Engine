@@ -24,11 +24,13 @@ class Indexer:
                 if term not in self.inverted_idx.keys():
                     if term[0].isupper():
                         if term.lower() in self .inverted_idx.keys():  # this is upper and there was lower before -> insert as lower
-                            term = term.lower()
-                            self.inverted_idx[term] += 1
+                            new_term = term.lower()
+                            self.inverted_idx[new_term] += 1
+                            self.postingDict[new_term].append((document.tweet_id, document_dictionary[term]))
                         else:   # this is upper and there wad noting before -> insert as upper
                             self.inverted_idx[term] = 1
-                            self.postingDict[term] = []
+                            # self.postingDict[term] = []
+                            self.postingDict[term].append((document.tweet_id, document_dictionary[term]))
 
                     elif term[0].islower(): # this is lower and there wad upper before -> insert as lower and move what was at upper
                         if term.capitalize() in self.inverted_idx.keys():
@@ -39,14 +41,14 @@ class Indexer:
 
                         else:  # this is lower and there wad noting before -> insert as lower
                             self.inverted_idx[term] = 1
-                            self.postingDict[term] = []
+                            # self.postingDict[term] = []
                     else:
                         self.inverted_idx[term] = 1
-                        self.postingDict[term] = []
+                        # self.postingDict[term] = []
+                        self.postingDict[term].append((document.tweet_id, document_dictionary[term]))
                 else:  # term was in before in the same way
                     self.inverted_idx[term] += 1
-
-                self.postingDict[term].append((document.tweet_id, document_dictionary[term]))
+                    self.postingDict[term].append((document.tweet_id, document_dictionary[term]))
 
             except:
                 print('problem with the following key {}'.format(term[0]))
