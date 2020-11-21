@@ -31,7 +31,7 @@ class Parse:
         # text_tokens = WhitespaceTokenizer().tokenize(text)
         text_tokens = text.split(" ")
         # text_tokens_without_stopwords = [w.lower() for w in text_tokens if w not in self.stop_words]
-        text_tokens_without_stopwords = [w for w in text_tokens if w not in self.stop_words and len(w) > 0]
+        text_tokens_without_stopwords = [w for w in text_tokens if w.lower() not in self.stop_words and len(w) > 0]
 
         return text_tokens_without_stopwords
 
@@ -50,7 +50,8 @@ class Parse:
         quote_text = doc_as_list[6]
         quote_url = doc_as_list[7]
         term_dict = {}
-        named_entity = self.Named_Entity_Recognition(full_text)
+        named_entity = None
+        # named_entity = self.Named_Entity_Recognition(full_text)
         tokenized_text = self.parse_sentence(full_text)
 
         doc_length = len(tokenized_text)  # after text operations.
@@ -287,7 +288,7 @@ class Parse:
                                 term = new_term
                             term += sign
             #  unique words
-            if index < len(tokenized_text) - 1:
+            if index < len(tokenized_text) - 1 - skip :
                 after_term = tokenized_text[index + 1 + skip]
                 if after_term.lower() == "percent" or after_term.lower() == "percentage":
                     term += '%'
@@ -350,7 +351,8 @@ class Parse:
             after_term = tokenized_text[index + 1]
             if '/' in after_term:
                 slash_index = after_term.index('/')
-                if after_term[slash_index-1] is not None and after_term[slash_index + 1] is not None:
+                # if after_term[slash_index-1] is not None and after_term[slash_index + 1] is not None:
+                if len(after_term) >= 3:
                     if after_term[slash_index-1].isdigit():
                         if after_term[slash_index + 1].isdigit():
                             if not is_big:
