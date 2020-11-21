@@ -32,7 +32,7 @@ class Parse:
         # text_tokens = WhitespaceTokenizer().tokenize(text)
         text_tokens = text.split(" ")
         # text_tokens_without_stopwords = [w.lower() for w in text_tokens if w not in self.stop_words]
-        text_tokens_without_stopwords = [w for w in text_tokens if w not in self.stop_words and len(w) > 0]
+        text_tokens_without_stopwords = [w for w in text_tokens if w.lower() not in self.stop_words and len(w) > 0]
 
         return text_tokens_without_stopwords
 
@@ -59,7 +59,7 @@ class Parse:
         # for term in tokenized_text:  # enumerate---------------->
         tokenized_text_len = len(tokenized_text)
         temp_split_url = []
-  #      temp_split_url = self.convert_full_url(url)  # get list of terms from URL
+        temp_split_url = self.convert_full_url(url)  # get list of terms from URL
         skip = 0
         temp_split_hashtag = []
         index = 0
@@ -71,7 +71,7 @@ class Parse:
             # roles :
             term, skip = self.convert_numbers(index, term, tokenized_text)
             temp_split_hashtag, to_delete_Hash = self.convert_hashtag(term, temp_split_hashtag)
-         #   temp_split_url, to_delete_URL = self.convert_url(term, temp_split_url)  # create set of terms from URL or full text
+            temp_split_url, to_delete_URL = self.convert_url(term, temp_split_url)  # create set of terms from URL or full text
 
             if self.stemming:
                 term = self.convert_stemming(term)
