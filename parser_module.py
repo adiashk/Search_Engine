@@ -17,7 +17,7 @@ class Parse:
     def __init__(self, stemming):
         self.stop_words = stopwords.words('english')
         self.stemming = stemming
-
+        self.named_entity = None
     def parse_sentence(self, text):
         """
         This function tokenize, remove stop words and apply lower case for every word within the text
@@ -26,10 +26,14 @@ class Parse:
         """
         # text_tokens = word_tokenize(text)
         # text_tokens = TweetTokenizer().tokenize(text)
-        text = re.sub('(?<=\D)[.,]|[.,](?=\D)', '', text)
+        # text = re.sub('(?<=\D)[.,]|[.,](?=\D)', '', text)
+        text = re.sub('(?<=\D)[.,]|[\u2070\u2071\u00b9\u00b2\u00b3\u2074-\u207F]|[.,](?=\D)', '', text)
         text = text.replace('\n', ' ')
         # text_tokens = WhitespaceTokenizer().tokenize(text)
         text_tokens = text.split(" ")
+
+        self.named_entity = self.Named_Entity_Recognition(text_tokens)
+
         # text_tokens_without_stopwords = [w.lower() for w in text_tokens if w not in self.stop_words]
         text_tokens_without_stopwords = [w for w in text_tokens if w.lower() not in self.stop_words and len(w) > 0]
 
@@ -50,8 +54,6 @@ class Parse:
         quote_text = doc_as_list[6]
         quote_url = doc_as_list[7]
         term_dict = {}
-        named_entity = None
-        # named_entity = self.Named_Entity_Recognition(full_text)
         tokenized_text = self.parse_sentence(full_text)
 
         doc_length = len(tokenized_text)  # after text operations.
@@ -59,7 +61,7 @@ class Parse:
         # for term in tokenized_text:  # enumerate---------------->
         tokenized_text_len = len(tokenized_text)
         temp_split_url = []
-  #      temp_split_url = self.convert_full_url(url)  # get list of terms from URL
+        #      temp_split_url = self.convert_full_url(url)  # get list of terms from URL
         skip = 0
         temp_split_hashtag = []
         index = 0
@@ -71,11 +73,11 @@ class Parse:
             # roles :
             term, skip = self.convert_numbers(index, term, tokenized_text)
             temp_split_hashtag, to_delete_Hash = self.convert_hashtag(term, temp_split_hashtag)
-         #   temp_split_url, to_delete_URL = self.convert_url(term, temp_split_url)  # create set of terms from URL or full text
+            #   temp_split_url, to_delete_URL = self.convert_url(term, temp_split_url)  # create set of terms from URL or full text
 
             if self.stemming:
                 term = self.convert_stemming(term)
-            if not to_delete_Hash: #and not to_delete_URL:
+            if not to_delete_Hash:  # and not to_delete_URL:
                 if term not in term_dict.keys():
                     term_dict[term] = 1
                 else:
@@ -100,7 +102,7 @@ class Parse:
         # term_dict = dict(tok_dict)
 
         document = Document(tweet_id, tweet_date, full_text, url, retweet_text, retweet_url, quote_text,
-                            quote_url, term_dict, doc_length, named_entity)
+                            quote_url, term_dict, doc_length, self.named_entity)
         return document
 
     def convert_hashtag(self, term, temp_split_hashtag):
@@ -124,7 +126,7 @@ class Parse:
             new_term_tag = new_term_tag.lower()
             new_pattern.append(new_term_tag)
             new_term_tag = new_term_tag.replace(' ', '')
-            new_pattern.append("#"+new_term_tag.lower())  #  #letItBe-> #letitbe
+            new_pattern.append("#" + new_term_tag.lower())  # #letItBe-> #letitbe
             pattern = []
             pattern.extend(new_pattern)
 
@@ -134,7 +136,7 @@ class Parse:
             new_term_tag = new_term_tag.join(pattern)  # #letItBe->let it be
             new_term_tag = new_term_tag.lower()
             pattern.append(new_term_tag)
-            pattern.append("#"+tag.lower())  #  #letItBe-> #letitbe
+            pattern.append("#" + tag.lower())  # #letItBe-> #letitbe
 
         pattern = [i for i in pattern if i]
         pattern = [i.lower() for i in pattern if i.lower() not in self.stop_words]
@@ -162,7 +164,7 @@ class Parse:
 
     def convert_url(self, term, temp_split_url):
         if "http" in term:
-            if len(temp_split_url) > 0:  #  there was long URL
+            if len(temp_split_url) > 0:  # there was long URL
                 return temp_split_url, True
 
             urlstokens = self.split_url(term)
@@ -288,7 +290,7 @@ class Parse:
                                 term = new_term
                             term += sign
             #  unique words
-            if index < len(tokenized_text) - 1 - skip :
+            if index < len(tokenized_text) - 1 - skip:
                 after_term = tokenized_text[index + 1 + skip]
                 if after_term.lower() == "percent" or after_term.lower() == "percentage":
                     term += '%'
@@ -353,25 +355,76 @@ class Parse:
                 slash_index = after_term.index('/')
                 # if after_term[slash_index-1] is not None and after_term[slash_index + 1] is not None:
                 if len(after_term) >= 3:
-                    if after_term[slash_index-1].isdigit():
+                    if after_term[slash_index - 1].isdigit():
                         if after_term[slash_index + 1].isdigit():
                             if not is_big:
                                 term += ' ' + after_term
                             skip += 1
         return term, skip
 
-    def Named_Entity_Recognition(self, text):
-        sp = spacy.load('en_core_web_sm')
-        sen = sp(text)
-        # sen = sp(u'Manchester United is looking to sign Harry Kane for $90 million in Manchester United')
-        named_entity = []
-        for name in list(sen.ents):
-            named_entity.append(str(name))
-        #     entity.text
-        counter_names = Counter(named_entity)
-        return counter_names
-        # for entity in sen.ents:
-        #     print(entity.text + ' - ' + entity.label_ + ' - ' + str(spacy.explain(entity.label_)))
+    # def Named_Entity_Recognition(self, full_text):
+    #     sp = spacy.load('en_core_web_sm')
+    #     sen = sp(full_text)
+    #     # sen = sp(u'Manchester United is looking to sign Harry Kane for $90 million in Manchester United')
+    #     named_entity = []
+    #     for name in list(sen.ents):
+    #         named_entity.append(str(name))
+    #     #     entity.text
+    #     counter_names = Counter(named_entity)
+    #     return counter_names
+    #     # for entity in sen.ents:
+    #     #     print(entity.text + ' - ' + entity.label_ + ' - ' + str(spacy.explain(entity.label_)))
+
+    # def Named_Entity_Recognition(self, text):
+    #     names = []
+    #     # upper_words = re.findall('[A-Z]+[A-Za-z]+', text)  #  all the uppercase words
+    #     upper_words = re.compile(r"[A-Z][a-z]+|[A-Z]+(?![a-z])").findall(text)
+    #     text = re.sub('(?<=\D)[.,]|[\u2070\u2071\u00b9\u00b2\u00b3\u2074-\u207F]|[.,](?=\D)', '', text)
+    #     text = text.replace('\n', ' ')
+    #     text = text.replace('-', ' ')
+    #     text = text.split(" ")
+    #     # names.extend(upper_words)
+    #     i = 0
+    #     while i < len(upper_words):
+    #         term = upper_words[i]
+    #         index_in_text = text.index(term)
+    #         next_index = index_in_text + 1  # the index of the word in the text after this term
+    #         while next_index < len(text):
+    #             if text[next_index] in upper_words:  # the follow term is upper
+    #                 term = term + ' ' + text[next_index]
+    #                 next_index += 1
+    #             else:
+    #                 names.append(term)
+    #                 i = next_index - index_in_text + 1
+    #                 break
+    #     return names
+
+    def Named_Entity_Recognition(self, text_tokens):
+        names = []
+        # upper_words = re.compile(r"[A-Z][a-z]+|[A-Z]+(?![a-z])").findall(text)
+        # upper_words = [w for w in text_tokens if w[0].isupper() and len(w) > 0]
+        upper_words = []
+        index = 0
+        while index < len(text_tokens):
+            term = text_tokens[index]
+            if len(term) > 0 and term[0].isupper():
+                next_index = index + 1
+                while next_index < len(text_tokens):
+                    next_term = text_tokens[next_index]
+                    if len(next_term) > 0 and next_term[0].isupper():
+                        if '-' in next_term:
+                            next_term = next_term.replace('-', ' ')
+                        term += ' ' + next_term  # add the next word
+                        next_index += 1
+                    else:
+                        break
+                index = next_index
+                names.append(term)
+            else:
+                index += 1
+        return names
+
+
 
     def convert_stemming(self, term):
         ps = PorterStemmer()

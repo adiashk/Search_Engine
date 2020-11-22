@@ -15,7 +15,15 @@ def test_parser():
     # Expected = ['Adi', 'https', 'www', 'instagram.com', 'p', 'CD7fAPWs3WM', 'igshid', 'o9kf0ugp1l8x'
     #             'https', 'www', 'geeksforgeeks.org', 'python', 'program', 'convert', 'list', 'string'
     #             ]
-    Actual = list(p.parse_doc(input).term_doc_dictionary.keys())
+  #  Actual = list(p.parse_doc(input).term_doc_dictionary.keys())
+   # assert set(Actual) == set(Expected)
+
+
+    text1 = ['Hello', 'my', 'name', 'is', 'Adi', 'Ashkenazi-Grassiani', '26', 'years', 'old', 'I', 'live', 'in', 'Kibutz', 'Yakum', 'sdjfh', 'King', 'Of', 'England' ]
+
+    Expected = ['Hello', 'I', 'Adi Ashkenazi Grassiani', 'Kibutz Yakum', 'King Of England' ]
+
+    Actual = p.Named_Entity_Recognition(text1)
     assert set(Actual) == set(Expected)
 
 
