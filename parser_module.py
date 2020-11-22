@@ -10,6 +10,8 @@ import utils
 import spacy
 from collections import Counter
 from nltk.stem import PorterStemmer
+import json
+from emoji import UNICODE_EMOJI
 
 
 class Parse:
@@ -26,8 +28,7 @@ class Parse:
         """
         # text_tokens = word_tokenize(text)
         # text_tokens = TweetTokenizer().tokenize(text)
-        # text = re.sub('(?<=\D)[.,]|[.,](?=\D)', '', text)
-        text = re.sub('(?<=\D)[.,]|[\u2070\u2071\u00b9\u00b2\u00b3\u2074-\u207F]|[.,](?=\D)', '', text)
+        text = re.sub('(?<=\D)[.,]|[\u2070\u2071\u00b9\u00b2\u00b3\u2074-\u27BF][.,](?=\D)', '', text)
         text = text.replace('\n', ' ')
         # text_tokens = WhitespaceTokenizer().tokenize(text)
         text_tokens = text.split(" ")
@@ -54,6 +55,8 @@ class Parse:
         quote_text = doc_as_list[6]
         quote_url = doc_as_list[7]
         term_dict = {}
+        named_entity = None
+        # named_entity = self.Named_Entity_Recognition(full_text)
         tokenized_text = self.parse_sentence(full_text)
 
         doc_length = len(tokenized_text)  # after text operations.
@@ -62,17 +65,24 @@ class Parse:
         tokenized_text_len = len(tokenized_text)
         temp_split_url = []
         #      temp_split_url = self.convert_full_url(url)  # get list of terms from URL
+        temp_split_url = self.convert_full_url(url)  # get list of terms from URL
         skip = 0
         temp_split_hashtag = []
         index = 0
         while index < len(tokenized_text):
             term = tokenized_text[index]
+            term = self.remove_signs(term)
+            if term == '':
+                index += 1
+                continue
+
             # index = tokenized_text_len - 1 - i
             # term = self.covert_words(index, term, tokenized_text)  # replace: Number percent To Number%
 
             # roles :
             term, skip = self.convert_numbers(index, term, tokenized_text)
             temp_split_hashtag, to_delete_Hash = self.convert_hashtag(term, temp_split_hashtag)
+            temp_split_url, to_delete_URL = self.convert_url(term, temp_split_url)  # create set of terms from URL or full text
             #   temp_split_url, to_delete_URL = self.convert_url(term, temp_split_url)  # create set of terms from URL or full text
 
             if self.stemming:
@@ -104,6 +114,26 @@ class Parse:
         document = Document(tweet_id, tweet_date, full_text, url, retweet_text, retweet_url, quote_text,
                             quote_url, term_dict, doc_length, self.named_entity)
         return document
+
+    def remove_signs(self, term):
+        if type(term) is str:
+            # check if can add to regex
+            term = term.replace(':', '')
+            term = term.replace('?', '')
+            term = term.replace('!', '')
+            term = term.replace('(', '')
+            term = term.replace(')', '')
+            new_term=''
+            # for c in term:
+            #     new_term += c if len(c.encode(encoding='utf_8')) == 1 else ''
+            # if re.search(u'[\u0000–\u007f]', term.encode('utf-8')) is True:
+            #     term = new_term
+            if '②' in term:
+                term = term.replace('②', '')
+            for t in term:
+                if t in UNICODE_EMOJI:
+                    term = term.replace(t, '')
+        return term
 
     def convert_hashtag(self, term, temp_split_hashtag):
         if "#" in term:
@@ -176,9 +206,12 @@ class Parse:
         return temp_split_url, False
 
     def split_url(self, tag):
+
         # pattern = re.compile(r'[\:/?=\-&]+', re.UNICODE)
         # return pattern.findall(self, tag)
         pattern = []
+        if tag is None:
+            return pattern
         if "www." in tag:
             # tag = tag.replace('www.', '')
             tag = tag.replace('www.', '')
@@ -355,49 +388,14 @@ class Parse:
                 slash_index = after_term.index('/')
                 # if after_term[slash_index-1] is not None and after_term[slash_index + 1] is not None:
                 if len(after_term) >= 3:
-                    if after_term[slash_index - 1].isdigit():
-                        if after_term[slash_index + 1].isdigit():
-                            if not is_big:
-                                term += ' ' + after_term
+                    if after_term[slash_index-1].isdigit():
+                        if slash_index + 1 < len(after_term) - 1:
+                            if after_term[slash_index + 1].isdigit():
+                                if not is_big:
+                                    term += ' ' + after_term
                             skip += 1
         return term, skip
 
-    # def Named_Entity_Recognition(self, full_text):
-    #     sp = spacy.load('en_core_web_sm')
-    #     sen = sp(full_text)
-    #     # sen = sp(u'Manchester United is looking to sign Harry Kane for $90 million in Manchester United')
-    #     named_entity = []
-    #     for name in list(sen.ents):
-    #         named_entity.append(str(name))
-    #     #     entity.text
-    #     counter_names = Counter(named_entity)
-    #     return counter_names
-    #     # for entity in sen.ents:
-    #     #     print(entity.text + ' - ' + entity.label_ + ' - ' + str(spacy.explain(entity.label_)))
-
-    # def Named_Entity_Recognition(self, text):
-    #     names = []
-    #     # upper_words = re.findall('[A-Z]+[A-Za-z]+', text)  #  all the uppercase words
-    #     upper_words = re.compile(r"[A-Z][a-z]+|[A-Z]+(?![a-z])").findall(text)
-    #     text = re.sub('(?<=\D)[.,]|[\u2070\u2071\u00b9\u00b2\u00b3\u2074-\u207F]|[.,](?=\D)', '', text)
-    #     text = text.replace('\n', ' ')
-    #     text = text.replace('-', ' ')
-    #     text = text.split(" ")
-    #     # names.extend(upper_words)
-    #     i = 0
-    #     while i < len(upper_words):
-    #         term = upper_words[i]
-    #         index_in_text = text.index(term)
-    #         next_index = index_in_text + 1  # the index of the word in the text after this term
-    #         while next_index < len(text):
-    #             if text[next_index] in upper_words:  # the follow term is upper
-    #                 term = term + ' ' + text[next_index]
-    #                 next_index += 1
-    #             else:
-    #                 names.append(term)
-    #                 i = next_index - index_in_text + 1
-    #                 break
-    #     return names
 
     def Named_Entity_Recognition(self, text_tokens):
         names = []
