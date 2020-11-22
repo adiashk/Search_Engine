@@ -11,6 +11,7 @@ import spacy
 from collections import Counter
 from nltk.stem import PorterStemmer
 import json
+from emoji import UNICODE_EMOJI
 
 
 class Parse:
@@ -27,10 +28,11 @@ class Parse:
         """
         # text_tokens = word_tokenize(text)
         # text_tokens = TweetTokenizer().tokenize(text)
-        text = re.sub('(?<=\D)[.,]|[.,](?=\D)', '', text)
+        text = re.sub('(?<=\D)[.,]|[\u2070\u2071\u00b9\u00b2\u00b3\u2074-\u27BF][.,](?=\D)', '', text)
         text = text.replace('\n', ' ')
         # text_tokens = WhitespaceTokenizer().tokenize(text)
         text_tokens = text.split(" ")
+
         # text_tokens_without_stopwords = [w.lower() for w in text_tokens if w not in self.stop_words]
         text_tokens_without_stopwords = [w for w in text_tokens if w.lower() not in self.stop_words and len(w) > 0]
 
@@ -66,6 +68,11 @@ class Parse:
         index = 0
         while index < len(tokenized_text):
             term = tokenized_text[index]
+            term = self.remove_signs(term)
+            if term == '':
+                index += 1
+                continue
+
             # index = tokenized_text_len - 1 - i
             # term = self.covert_words(index, term, tokenized_text)  # replace: Number percent To Number%
 
@@ -76,8 +83,13 @@ class Parse:
 
             if self.stemming:
                 term = self.convert_stemming(term)
+
+
             if not to_delete_Hash: #and not to_delete_URL:
+                # term = self.remove_signs(term)
                 if term not in term_dict.keys():
+                    if term == '':
+                        print("problem term!!!!!")
                     term_dict[term] = 1
                 else:
                     term_dict[term] += 1
@@ -85,12 +97,15 @@ class Parse:
             index += (skip + 1)
 
         for term in temp_split_hashtag:
+            # term = self.remove_signs(term)
             if term not in term_dict.keys():
                 term_dict[term] = 1
             else:
                 term_dict[term] += 1
 
         for term in temp_split_url:
+            # term = self.remove_signs(term)
+
             if term not in term_dict.keys():
                 term_dict[term] = 1
             else:
@@ -103,6 +118,26 @@ class Parse:
         document = Document(tweet_id, tweet_date, full_text, url, retweet_text, retweet_url, quote_text,
                             quote_url, term_dict, doc_length, named_entity)
         return document
+
+    def remove_signs(self, term):
+        if type(term) is str:
+            # check if can add to regex
+            term = term.replace(':', '')
+            term = term.replace('?', '')
+            term = term.replace('!', '')
+            term = term.replace('(', '')
+            term = term.replace(')', '')
+            new_term=''
+            # for c in term:
+            #     new_term += c if len(c.encode(encoding='utf_8')) == 1 else ''
+            # if re.search(u'[\u0000–\u007f]', term.encode('utf-8')) is True:
+            #     term = new_term
+            if '②' in term:
+                term = term.replace('②', '')
+            for t in term:
+                if t in UNICODE_EMOJI:
+                    term = term.replace(t, '')
+        return term
 
     def convert_hashtag(self, term, temp_split_hashtag):
         if "#" in term:
@@ -154,7 +189,9 @@ class Parse:
         if url != "{}":
             tempSplitURL = []
             url = json.loads(url)
+            # print(url)
             for u in url:
+                # print(url[u])
                 tempSplitURL.extend(self.split_url(url[u]))
             tempSplitURL = set(tempSplitURL)
             return list(tempSplitURL)
@@ -175,9 +212,12 @@ class Parse:
         return temp_split_url, False
 
     def split_url(self, tag):
+
         # pattern = re.compile(r'[\:/?=\-&]+', re.UNICODE)
         # return pattern.findall(self, tag)
         pattern = []
+        if tag is None:
+            return pattern
         if "www." in tag:
             # tag = tag.replace('www.', '')
             tag = tag.replace('www.', '')
@@ -355,9 +395,10 @@ class Parse:
                 # if after_term[slash_index-1] is not None and after_term[slash_index + 1] is not None:
                 if len(after_term) >= 3:
                     if after_term[slash_index-1].isdigit():
-                        if after_term[slash_index + 1].isdigit():
-                            if not is_big:
-                                term += ' ' + after_term
+                        if slash_index + 1 < len(after_term) - 1:
+                            if after_term[slash_index + 1].isdigit():
+                                if not is_big:
+                                    term += ' ' + after_term
                             skip += 1
         return term, skip
 

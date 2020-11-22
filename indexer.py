@@ -22,6 +22,8 @@ class Indexer:
             try:
                 # Update inverted index and posting
                 if term not in self.inverted_idx.keys():
+                    if term == '':
+                        print(term)
                     if term[0].isupper():
                         if term.lower() in self .inverted_idx.keys():  # this is upper and there was lower before -> insert as lower
                             new_term = term.lower()
