@@ -236,69 +236,6 @@ class Parse:
         text_tokens = [x for x in text_tokens if "http" not in x]
         return text_tokens
 
-    # def covert_words(self, index, term, tokenized_text):
-    #     if term.lower() == "percent" or term.lower() == "percentage":
-    #         self.check_number_before_sign_and_replace_word(index, tokenized_text, "%")
-    #     if term.lower() == "dollar" or term.lower() == "dollars":
-    #         self.check_number_before_sign_and_replace_word(index, tokenized_text, "$")
-    #     if term.lower() == "thousand":
-    #         self.check_number_before_sign_and_replace_word(index, tokenized_text, "K")
-    #     if term.lower() == "million":
-    #         self.check_number_before_sign_and_replace_word(index, tokenized_text, "M")
-    #     if term.lower() == "billion":
-    #         self.check_number_before_sign_and_replace_word(index, tokenized_text, "B")
-    #
-
-    # def check_number_before_sign_and_replace_word(self, index, tokenized_text, sign):
-    #     if tokenized_text[index - 1].isdigit():  # number_before_sign
-    #         tokenized_text[index - 1] += sign  # replace_word
-    #         del tokenized_text[index]
-
-    # def convert_numbers(self, index, term, tokenized_text):
-    #     isSign = False
-    #     sign = None
-    #     new_num = 0
-    #     if term[0].isdigit():
-    #         term = term.replace(',', '')
-    #         # if not term[len(term)-1].isdigit():
-    #         #     isSign = True
-    #         #     sign = term[len(term)-1]
-    #         #     term = term[0:len(term)-1]
-    #         try:
-    #             dec_num = float(term)
-    #             number = int(dec_num)
-    #         except:
-    #             if '/' in term:
-    #                 if tokenized_text[index - 1].isdigit():  # number_before_sign
-    #                     tokenized_text[index - 1] += " " + tokenized_text[index]  # replace_word
-    #                     del tokenized_text[index]
-    #             return
-    #         if dec_num < 1000:
-    #             if number != dec_num:
-    #                 dot_index = term.index('.')
-    #                 new_num = term[0:dot_index+4]
-    #                 tokenized_text[index] = new_num
-    #         if 1000 <= number < 1000000:
-    #             new_num = round(number / 1000, 3)  # keep 3 digits
-    #             if new_num == int(new_num):
-    #                 tokenized_text[index] = str(int(new_num)) + "K"
-    #             else:
-    #                 tokenized_text[index] = str(new_num) + "K"
-    #         elif 1000000 <= number < 1000000000:
-    #             new_num = round(number / 1000000, 3)
-    #             if new_num == int(new_num):
-    #                 tokenized_text[index] = str(int(new_num)) + "M"
-    #             else:
-    #                 tokenized_text[index] = str(new_num) + "M"
-    #         elif 1000000000 <= number:
-    #             new_num = round(number / 1000000000, 3)
-    #             if new_num == int(new_num):
-    #                 tokenized_text[index] = str(int(new_num)) + "B"
-    #             else:
-    #                 tokenized_text[index] = str(new_num) + "B"
-    #     # if isSign:
-    #     #     tokenized_text[index] = str(new_num) + sign
-    #     #     isSign = False
 
     def convert_numbers(self, index, term, tokenized_text):
         skip = 0
@@ -417,11 +354,13 @@ class Parse:
                     else:
                         break
                 index = next_index
-                names.append(term)
+                if term.lower() not in self.stop_words:
+                    names.append(term)
             else:
                 index += 1
-        return names
 
+        counter_names = Counter(names)
+        return counter_names
 
 
     def convert_stemming(self, term):

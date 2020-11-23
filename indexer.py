@@ -54,7 +54,7 @@ class Indexer:
 
             except:
                 print('problem with the following key {}'.format(term[0]))
-      #  self.add_named_entity(document)
+        self.add_named_entity(document)
 
     def add_named_entity(self, document):
         document_named_entity = document.named_entity
@@ -67,3 +67,5 @@ class Indexer:
 
                 else: # new possible entity
                     self.named_entity_idx[name].append((document.tweet_id, document_named_entity[name]))
+
+
