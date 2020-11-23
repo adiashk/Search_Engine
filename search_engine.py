@@ -25,8 +25,7 @@ def run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve
     indexer = Indexer(config)
 
     # documents_list = r.read_file(file_name='covid19_07-30.snappy.parquet')  # TODO - handel all files ~50 (can do with from multiprocessing.pool import ThreadPool)
-    # documents_list = r.read_file(file_name='covid19_07-08.snappy.parquet')
-    # documents_list = r.read_file(file_name='covid19_07-09.snappy.parquet')
+
     # Iterate over every document in the file
     counter = 0
     names = r.get_files_names_in_dir()
@@ -38,13 +37,12 @@ def run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve
             indexer.add_new_doc(parsed_document)  # index the document data
 
             counter += 1
-            if counter >= 500:
+            if counter >= 50000:
                 write_and_clean_buffer(indexer, num_of_writes)
                 num_of_writes += 1
                 counter = 0
         print('Finished parsing and indexing. Starting to export files')
     write_and_clean_buffer(indexer, num_of_writes)
-    num_of_writes += 1
     return num_of_writes
 
 
@@ -90,12 +88,11 @@ def union_posting_files(num_of_writes):
     path = pathlib.Path().absolute()
     save_path = str(path) + '\\posting\\'
 
-    letter_dict = defaultdict(list)
     counter = 1
     for l in letters:
         filename = str(save_path + l + str(counter))
         dict1 = utils.load_obj(filename)
-        while counter <= num_of_writes:
+        while counter < num_of_writes:
             counter += 1
             filename = str(save_path + l + str(counter))
             dict2 = utils.load_obj(filename)
@@ -109,7 +106,7 @@ def union_2_files(dict1, dict2):
     dd = defaultdict(list)
     for d in (dict1, dict2):
         for key, value in d.items():
-            dd[key].append(value)
+            dd[key].extend(value)
     return dd
 
 
