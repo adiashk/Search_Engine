@@ -28,7 +28,8 @@ class Parse:
         """
         # text_tokens = word_tokenize(text)
         # text_tokens = TweetTokenizer().tokenize(text)
-        text = re.sub('(?<=\D)[.,]|[\u2070\u2071\u00b9\u00b2\u00b3\u2074-\u27BF][.,](?=\D)', '', text)
+        # text = re.sub('(?<=\D)[.,]|[\u2070\u2071\u00b9\u00b2\u00b3\u2074-\u27BF][.,](?=\D)', '', text)
+        text = re.sub('(?<=\D)[.,]|[\u0080-\uFFFF]|[.,](?=\D)', '', text)
         text = text.replace('\n', ' ')
         # text_tokens = WhitespaceTokenizer().tokenize(text)
         text_tokens = text.split(" ")
@@ -132,11 +133,11 @@ class Parse:
             #     new_term += c if len(c.encode(encoding='utf_8')) == 1 else ''
             # if re.search(u'[\u0000–\u007f]', term.encode('utf-8')) is True:
             #     term = new_term
-            if '②' in term:
-                term = term.replace('②', '')
-            for t in term:
-                if t in UNICODE_EMOJI:
-                    term = term.replace(t, '')
+            # if '②' in term:
+            #     term = term.replace('②', '')
+            # for t in term:
+            #     if t in UNICODE_EMOJI:
+            #         term = term.replace(t, '')
         return term
 
     def convert_hashtag(self, term, temp_split_hashtag):
