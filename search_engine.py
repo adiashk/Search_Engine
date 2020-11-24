@@ -9,7 +9,7 @@ from parser_module import Parse
 from indexer import Indexer
 from searcher import Searcher
 import utils
-
+import time
 letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
            'u', 'v', 'w', 'x', 'y', 'z', 'num', '#', '@']
 def run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve):
@@ -43,6 +43,7 @@ def run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve
                 counter = 0
         print('Finished parsing and indexing. Starting to export files')
     write_and_clean_buffer(indexer, num_of_writes)
+    print(time.time())
     return num_of_writes
 
 
@@ -111,6 +112,7 @@ def union_2_files(dict1, dict2):
 
 
 def main(corpus_path, output_path, stemming, queries, num_docs_to_retrieve):
+    #TODO- queries is path to file or list of queries
     num_of_writes = run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve)
     union_posting_files(num_of_writes)
     query = input("Please enter a query: ")

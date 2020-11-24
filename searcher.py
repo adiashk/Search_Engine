@@ -1,6 +1,7 @@
 from parser_module import Parse
 from ranker import Ranker
 import utils
+from word2vec import Word2vec
 
 
 class Searcher:
@@ -19,6 +20,9 @@ class Searcher:
         :param query: query
         :return: dictionary of relevant documents.
         """
+        word2vec = Word2vec()
+        similar_words = word2vec.get_most_similar_words(['winter', 'dressed'])
+
         posting = utils.load_obj("posting")
         relevant_docs = {}
         for term in query:
