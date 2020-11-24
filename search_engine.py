@@ -10,13 +10,17 @@ from indexer import Indexer
 from searcher import Searcher
 import utils
 import time
+
 letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
            'u', 'v', 'w', 'x', 'y', 'z', 'num', '#', '@']
+
+
 def run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve):
     """
 
     :return:
     """
+    print("start: ", time.asctime(time.localtime(time.time())))
     number_of_documents = 0
     num_of_writes = 1
     config = ConfigClass(corpus_path)
@@ -43,29 +47,10 @@ def run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve
                 counter = 0
         print('Finished parsing and indexing. Starting to export files')
     write_and_clean_buffer(indexer, num_of_writes)
-    print(time.time())
+    print("finish parser & index: ", time.asctime(time.localtime(time.time())))
+    utils.save_obj(indexer.inverted_idx, "inverted_idx")
+    # utils.save_obj(indexer.postingDict, "posting")
     return num_of_writes
-
-
-
-
-    # utils.save_obj(indexer.inverted_idx, "inverted_idx")
-    # utils.save_obj(indexer.postingDict, "post/posting")
-
-
-def load_index():
-    print('Load inverted index')
-    inverted_index = utils.load_obj("inverted_idx")
-    return inverted_index
-
-
-def search_and_rank_query(query, inverted_index, k, stemming):
-    p = Parse(stemming)
-    query_as_list = p.parse_sentence(query)
-    searcher = Searcher(inverted_index)
-    relevant_docs = searcher.relevant_docs_from_posting(query_as_list)
-    ranked_docs = searcher.ranker.rank_relevant_doc(relevant_docs)
-    return searcher.ranker.retrieve_top_k(ranked_docs, k)
 
 
 def write_and_clean_buffer(indexer, write_number):
@@ -111,12 +96,41 @@ def union_2_files(dict1, dict2):
     return dd
 
 
+def load_index():
+    print('Load inverted index')
+    inverted_index = utils.load_obj("inverted_idx")
+    return inverted_index
+
+
+def search_and_rank_query(query, inverted_index, num_docs_to_retrieve, stemming):
+    p = Parse(stemming)
+    query_list = []
+    for q in query:
+        query_list.append(p.parse_query(q))
+    for q in query_list:
+        searcher = Searcher(inverted_index, stemming)
+        relevant_docs = searcher.relevant_docs_from_posting(q)
+        ranked_docs = searcher.ranker.rank_relevant_doc(relevant_docs)
+    return searcher.ranker.retrieve_top_k(ranked_docs, num_docs_to_retrieve)
+
+
+def read_queries(queries):
+    with open(queries) as f:
+        content = f.readlines()
+    # you may also want to remove whitespace characters like `\n` at the end of each line
+    content = [x.strip() for x in content]
+    return content
+
+
 def main(corpus_path, output_path, stemming, queries, num_docs_to_retrieve):
-    #TODO- queries is path to file or list of queries
     num_of_writes = run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve)
     union_posting_files(num_of_writes)
-    query = input("Please enter a query: ")
-    k = int(input("Please enter number of docs to retrieve: "))
+    print("finish union posting files: ", time.asctime(time.localtime(time.time())))
+    if type(queries) != list:
+        queries = read_queries(queries)
+    # query = input("Please enter a query: ")
+    # k = int(input("Please enter number of docs to retrieve: "))
     inverted_index = load_index()
-    for doc_tuple in search_and_rank_query(query, inverted_index, k, stemming):
+    rank_query = search_and_rank_query(queries, inverted_index, num_docs_to_retrieve, stemming)
+    for doc_tuple in rank_query:
         print('tweet id: {}, score (unique common words with query): {}'.format(doc_tuple[0], doc_tuple[1]))
