@@ -1,8 +1,8 @@
 import search_engine
 
 
-# corpus_path = "C:\\Users\\ASUS\\Desktop\\Data"
-corpus_path = "C:\\Users\\ASUS\\Desktop\\files"
+corpus_path = "C:\\Users\\ASUS\\Desktop\\Data"
+# corpus_path = "C:\\Users\\ASUS\\Desktop\\files"
 output_path = None
 stemming = False
 queries = 'queries.txt'

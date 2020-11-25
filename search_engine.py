@@ -41,11 +41,12 @@ def run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve
             indexer.add_new_doc(parsed_document)  # index the document data
 
             counter += 1
-            if counter >= 50000:
+            if counter >= 500000:
                 write_and_clean_buffer(indexer, num_of_writes)
-                num_of_writes += 1
                 counter = 0
-        print('Finished parsing and indexing. Starting to export files')
+                print("finish parser & index number: ",num_of_writes, " At: ", time.asctime(time.localtime(time.time())))
+                num_of_writes += 1
+        #print('Finished parsing and indexing. Starting to export files')
     write_and_clean_buffer(indexer, num_of_writes)
     print("finish parser & index: ", time.asctime(time.localtime(time.time())))
     utils.save_obj(indexer.inverted_idx, "inverted_idx")
@@ -86,6 +87,7 @@ def union_posting_files(num_of_writes):
         counter = 1
         filename = str(save_path + l)
         utils.save_obj(dict1, filename)
+        # TODO- check upper and lower letters in union
 
 
 def union_2_files(dict1, dict2):
