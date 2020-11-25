@@ -20,6 +20,43 @@ class Parse:
         self.stop_words = stopwords.words('english')
         self.stemming = stemming
         self.named_entity = None
+
+    def parse_query(self, query):
+        tokenized_text = self.parse_sentence(query)
+        parse_query = []
+        split_url = self.find_url(tokenized_text)  # create set of terms from URL or full text
+        split_hashtag = self.find_hashtags(tokenized_text)
+        index = 0
+        while index < len(tokenized_text):
+            term = tokenized_text[index]
+            term = self.remove_signs(term)
+            if term == '':
+                index += 1
+                continue
+
+            # roles :
+            term, skip = self.convert_numbers(index, term, tokenized_text)
+
+            if self.stemming:
+                term = self.convert_stemming(term)
+
+            parse_query.append(term)
+            index += (skip + 1)
+
+        for term in split_url:
+            if self.stemming:
+                term = self.convert_stemming(term)
+            parse_query.append(term)
+
+        for term in split_hashtag:
+            if self.stemming:
+                term = self.convert_stemming(term)
+            parse_query.append(term)
+
+        parse_query.extend(self.named_entity)
+        return list(set(parse_query))
+        # return [p for p in parse_query if p not in parse_query]
+
     def parse_sentence(self, text):
         """
         This function tokenize, remove stop words and apply lower case for every word within the text
@@ -104,20 +141,21 @@ class Parse:
             index += (skip + 1)
 
         for term in temp_split_hashtag:
+            if self.stemming:
+                term = self.convert_stemming(term)
             if term not in term_dict.keys():
                 term_dict[term] = 1
             else:
                 term_dict[term] += 1
 
         for term in temp_split_url:
+            if self.stemming:
+                term = self.convert_stemming(term)
             if term not in term_dict.keys():
                 term_dict[term] = 1
             else:
                 term_dict[term] += 1
 
-        # tokenized_text.extend(temp_split_url)
-        # tok_dict = Counter(tokenized_text)
-        # term_dict = dict(tok_dict)
 
         document = Document(tweet_id, tweet_date, full_text, url, retweet_text, retweet_url, quote_text,
                             quote_url, term_dict, doc_length, self.named_entity)
