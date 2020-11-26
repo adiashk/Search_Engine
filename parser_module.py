@@ -1,4 +1,5 @@
 import json
+import operator
 
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
@@ -97,7 +98,7 @@ class Parse:
         # named_entity = self.Named_Entity_Recognition(full_text)
         tokenized_text = self.parse_sentence(full_text)
 
-        doc_length = len(tokenized_text)  # after text operations.
+        # doc_length = len(tokenized_text)  # after text operations.
 
         # for term in tokenized_text:  # enumerate---------------->
         tokenized_text_len = len(tokenized_text)
@@ -107,6 +108,7 @@ class Parse:
         skip = 0
         temp_split_hashtag = []
         index = 0
+        doc_length = 0
         while index < len(tokenized_text):
             term = tokenized_text[index]
             term = self.remove_signs(term)
@@ -130,6 +132,8 @@ class Parse:
                     term_dict[term] = 1
                 else:
                     term_dict[term] += 1
+                doc_length += 1
+
 
             index += (skip + 1)
 
@@ -149,9 +153,18 @@ class Parse:
             else:
                 term_dict[term] += 1
 
+        doc_length = doc_length + len(temp_split_url) + len(temp_split_hashtag)
+
+        amount_of_unique_words = len(term_dict)
+
+        if len(term_dict) > 0:
+            most_frequent_term = max(term_dict, key=term_dict.get)
+            max_tf = term_dict[most_frequent_term]
+        else:
+            max_tf = 0
 
         document = Document(tweet_id, tweet_date, full_text, url, retweet_text, retweet_url, quote_text,
-                            quote_url, term_dict, doc_length, self.named_entity)
+                            quote_url, term_dict, doc_length,amount_of_unique_words, max_tf, self.named_entity)
         return document
 
     def remove_signs(self, term):

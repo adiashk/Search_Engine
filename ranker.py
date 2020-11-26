@@ -1,6 +1,9 @@
+import math
+
+
 class Ranker:
-    def __init__(self):
-        pass
+    def __init__(self, inverted_index):
+        self.inverted_index = inverted_index
 
     @staticmethod
     def rank_relevant_doc(relevant_doc):
@@ -21,3 +24,13 @@ class Ranker:
         :return: list of relevant document
         """
         return sorted_relevant_doc[:k]
+
+    def tf(self, doc, term):
+        Fij = doc.term_doc_dictionary[term]  # the number of times the word i occurs in the document j
+        Dj = doc.doc_length
+        return Fij/Dj
+
+    def idf(self, doc, term):
+        N = len(self.inverted_index)
+        dfi = self.inverted_index[term]
+        return math.log2(N/dfi)

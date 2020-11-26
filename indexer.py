@@ -4,7 +4,7 @@ class Indexer:
 
     def __init__(self, config):
         self.inverted_idx = defaultdict(int)
-        self.postingDict = defaultdict(list)
+        self.postingDict = defaultdict(list)  # value = [(tweet_id, count_in_doc),...,(id, count)]
         self.named_entity_idx = defaultdict(list)
         self.config = config
 
@@ -28,11 +28,10 @@ class Indexer:
                         if term.lower() in self .inverted_idx.keys():  # this is upper and there was lower before -> insert as lower
                             new_term = term.lower()
                             self.inverted_idx[new_term] += 1
-                            self.postingDict[new_term].append((document.tweet_id, document_dictionary[term]))
+                            self.postingDict[new_term].append((document.tweet_id, document_dictionary[term], document.amount_of_unique_words, document.max_tf))
                         else:   # this is upper and there wad noting before -> insert as upper
                             self.inverted_idx[term] = 1
-                            # self.postingDict[term] = []
-                            self.postingDict[term].append((document.tweet_id, document_dictionary[term]))
+                            self.postingDict[term].append((document.tweet_id, document_dictionary[term], document.amount_of_unique_words, document.max_tf))
 
                     elif term[0].islower(): # this is lower and there wad upper before -> insert as lower and move what was at upper
                         if term.capitalize() in self.inverted_idx.keys():
@@ -43,14 +42,12 @@ class Indexer:
 
                         else:  # this is lower and there wad noting before -> insert as lower
                             self.inverted_idx[term] = 1
-                            # self.postingDict[term] = []
                     else:
                         self.inverted_idx[term] = 1
-                        # self.postingDict[term] = []
-                        self.postingDict[term].append((document.tweet_id, document_dictionary[term]))
+                        self.postingDict[term].append((document.tweet_id, document_dictionary[term], document.amount_of_unique_words, document.max_tf))
                 else:  # term was in before in the same way
                     self.inverted_idx[term] += 1
-                    self.postingDict[term].append((document.tweet_id, document_dictionary[term]))
+                    self.postingDict[term].append((document.tweet_id, document_dictionary[term], document.amount_of_unique_words, document.max_tf))
 
             except:
                 print('problem with the following key {}'.format(term[0]))
@@ -62,10 +59,10 @@ class Indexer:
             for name in document_named_entity:
                 if name in self.named_entity_idx.keys():  # recognize as named_entity before
                     self.inverted_idx[name] += 1
-                    self.postingDict[name].append((document.tweet_id, document_named_entity[name]))
+                    self.postingDict[name].append((document.tweet_id, document_named_entity[name], document.amount_of_unique_words, document.max_tf))
                     self.postingDict[name].extend(self.named_entity_idx[name])
 
                 else: # new possible entity
-                    self.named_entity_idx[name].append((document.tweet_id, document_named_entity[name]))
+                    self.named_entity_idx[name].append((document.tweet_id, document_named_entity[name], document.amount_of_unique_words, document.max_tf))
 
 

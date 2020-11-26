@@ -50,22 +50,20 @@ def run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve
     write_and_clean_buffer(indexer, num_of_writes)
     print("finish parser & index: ", time.asctime(time.localtime(time.time())))
     utils.save_obj(indexer.inverted_idx, "inverted_idx")
-    # utils.save_obj(indexer.postingDict, "posting")
+    print("finish save index: ", time.asctime(time.localtime(time.time())))
+
     return num_of_writes
 
 
 def write_and_clean_buffer(indexer, write_number):
     # after 500000 docs --> write the postingDict to the Disk
-
     path = pathlib.Path().absolute()
     save_path = str(path) + '\\posting\\'
     if not os.path.exists(os.path.dirname(save_path)):
         os.makedirs(os.path.dirname(save_path))
-
     for l in letters:
         filename = str(save_path + l + str(int(write_number)))
         utils.save_obj(indexer.postingDict, filename)
-
     indexer.postingDict = {}
     indexer.postingDict = defaultdict(list)
 
