@@ -28,7 +28,7 @@ def run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve
     p = Parse(stemming)
     indexer = Indexer(config)
 
-    # documents_list = r.read_file(file_name='covid19_07-30.snappy.parquet')  # TODO - handel all files ~50 (can do with from multiprocessing.pool import ThreadPool)
+    # documents_list = r.read_file(file_name='covid19_07-11.snappy.parquet')  # TODO - handel all files ~50 (can do with from multiprocessing.pool import ThreadPool)
 
     # Iterate over every document in the file
     counter = 0
@@ -64,7 +64,11 @@ def write_and_clean_buffer(indexer, write_number):
 
     for l in letters:
         filename = str(save_path + l + str(int(write_number)))
-        utils.save_obj(indexer.postingDict, filename)
+        if l == 'num':
+            dic_letters = {key: indexer.postingDict[key] for key in indexer.postingDict.keys() if key[0].isdigit()}
+        else:
+            dic_letters = {key: indexer.postingDict[key] for key in indexer.postingDict.keys() if key[0].lower() == l}
+        utils.save_obj(dic_letters, filename)
 
     indexer.postingDict = {}
     indexer.postingDict = defaultdict(list)
@@ -90,11 +94,32 @@ def union_posting_files(num_of_writes):
         # TODO- check upper and lower letters in union
 
 
+# def union_2_files(dict1, dict2):
+#     dd = defaultdict(list)
+#     for d in (dict1, dict2):
+#         for key, value in d.items():
+#             dd[key].extend(value)
+#     return dd
+
 def union_2_files(dict1, dict2):
     dd = defaultdict(list)
     for d in (dict1, dict2):
         for key, value in d.items():
-            dd[key].extend(value)
+            if key[0].isupper(): #key is uppercase
+                if key.lower() in dd: #there is uppercase in dict so add value to lower
+                    dd[key.lower()].extend(value)
+                else: #add uppercase to dict, there is no lower
+                    dd[key].extend(value)
+            elif key[0].upper() in dd: #key is lowercase and there is uppercase in dict
+                dd[key] = value #add new lower key to dict
+                if key.capitalize() in dd: #if lowercase
+                    dd[key].extend(dd[key.capitalize()]) #add value capital to lower
+                    del dd[key.capitalize()]
+                else: #add value upper to lower
+                    dd[key].extend(dd[key.upper()])
+                    del dd[key.upper()]
+            else: #new key
+                dd[key].extend(value)
     return dd
 
 
@@ -125,7 +150,8 @@ def read_queries(queries):
 
 
 def main(corpus_path, output_path, stemming, queries, num_docs_to_retrieve):
-    num_of_writes = run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve)
+    # num_of_writes = run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve)
+    num_of_writes =21
     union_posting_files(num_of_writes)
     print("finish union posting files: ", time.asctime(time.localtime(time.time())))
     if type(queries) != list:
