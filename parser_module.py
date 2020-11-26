@@ -66,7 +66,14 @@ class Parse:
         """
         # text_tokens = word_tokenize(text)
         # text_tokens = TweetTokenizer().tokenize(text)
-        text = re.sub('(?<=\D)[.,]|[\u0080-\uFFFF]|[.,](?=\D)', '', text)
+        # test = 'www.yu.il/it/ RT (RTAF!) ~? 3533 yuval'
+        text = re.sub('(?<=\D)[.,!?()~;]|[\u0080-\uFFFF]|[.,](?=\D)', '', text)
+        # test = re.sub('(?<=\D)[.,)(?:!]|[\u007B-\uFFFF]|[.,!](?=\D)', '', test)
+        # test = re.compile(r"[a-zA-Z]+").findall(test)
+        # mylist = ['spam', 'ham', 'eggs']
+        # t = ' '
+        # t = t.join(mylist)
+        # print(t)
         text = text.replace('\n', ' ')
         text = text.replace('\t', ' ')
         # text_tokens = WhitespaceTokenizer().tokenize(text)
@@ -171,10 +178,10 @@ class Parse:
         if type(term) is str:
             # check if can add to regex
             term = term.replace(':', '')
-            term = term.replace('?', '')
-            term = term.replace('!', '')
-            term = term.replace('(', '')
-            term = term.replace(')', '')
+            # term = term.replace('?', '')
+            # term = term.replace('!', '')
+            # term = term.replace('(', '')
+            # term = term.replace(')', '')
             # new_term=''
             # for c in term:
             #     new_term += c if len(c.encode(encoding='utf_8')) == 1 else ''
@@ -274,6 +281,7 @@ class Parse:
         pattern = [i for i in pattern if i]
         pattern = [i for i in pattern if i.lower() not in self.stop_words]
         return pattern
+
 
     def find_url(self, text_tokens):
         url = [s for s in text_tokens if "http" in s]
