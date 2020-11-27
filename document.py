@@ -1,4 +1,6 @@
+from collections import defaultdict
 
+import numpy
 class Document:
 
     def __init__(self, tweet_id, tweet_date=None, full_text=None, url=None, retweet_text=None, retweet_url=None,
@@ -28,3 +30,9 @@ class Document:
         self.max_tf = max_tf
         self.amount_of_unique_words = amount_of_unique_words
         self.named_entity = named_entity
+
+
+
+
+
+

@@ -3,6 +3,7 @@ import os
 import pathlib
 from collections import defaultdict
 
+
 from reader import ReadFile
 from configuration import ConfigClass
 from parser_module import Parse
@@ -11,11 +12,13 @@ from searcher import Searcher
 import utils
 import time
 
+from word2vec import Word2vec
+
 letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
            'u', 'v', 'w', 'x', 'y', 'z', 'num', '#', '@']
 
 
-def run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve):
+def run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve, word2vec):
     """
 
     :return:
@@ -26,8 +29,7 @@ def run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve
     config = ConfigClass(corpus_path)
     r = ReadFile(corpus_path=config.get__corpusPath())
     p = Parse(stemming)
-    indexer = Indexer(config)
-
+    indexer = Indexer(config, word2vec)
     # documents_list = r.read_file(file_name='covid19_07-11.snappy.parquet')  # TODO - handel all files ~50 (can do with from multiprocessing.pool import ThreadPool)
 
     # Iterate over every document in the file
@@ -37,9 +39,11 @@ def run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve
         documents_list = r.read_file(file_name=str(name))
         for idx, document in enumerate(documents_list):
             parsed_document = p.parse_doc(document)  # parse the document
+            # parsed_document.add_doc_vector(word2vec)
+            # parsed_document.get_mean_vector(word2vec)
             number_of_documents += 1
-            indexer.add_new_doc(parsed_document)  # index the document data
 
+            indexer.add_new_doc(parsed_document, num_of_writes)  # index the document data
             counter += 1
             if counter >= 500000:
                 write_and_clean_buffer(indexer, num_of_writes)
@@ -74,6 +78,14 @@ def write_and_clean_buffer(indexer, write_number):
     indexer.postingDict = {}
     indexer.postingDict = defaultdict(list)
 
+    save_path = str(path) + '\\documents\\'
+    if not os.path.exists(os.path.dirname(save_path)):
+        os.makedirs(os.path.dirname(save_path))
+    filename = str(save_path + str(int(write_number)))
+    utils.save_obj(indexer.documents_dict, filename)
+
+    indexer.documents_dict = {}
+    indexer.documents_dict = defaultdict(list)
 
 def union_posting_files(num_of_writes):
     # inverted_index = utils.load_obj("inverted_idx")
@@ -92,7 +104,6 @@ def union_posting_files(num_of_writes):
         counter = 1
         filename = str(save_path + l)
         utils.save_obj(dict1, filename)
-        # TODO- check upper and lower letters in union
 
 
 # def union_2_files(dict1, dict2):
@@ -130,16 +141,16 @@ def load_index():
     return inverted_index
 
 
-def search_and_rank_query(query, inverted_index, num_docs_to_retrieve, stemming):
+def search_and_rank_query(queries_list, inverted_index, num_docs_to_retrieve, stemming, word2vec):
     p = Parse(stemming)
-    query_list = []
-    for q in query:
-        query_list.append(p.parse_query(q))
-    for q in query_list:
-        searcher = Searcher(inverted_index, stemming)
-        relevant_docs = searcher.relevant_docs_from_posting(q)
-        ranked_docs = searcher.ranker.rank_relevant_doc(relevant_docs)
-    return searcher.ranker.retrieve_top_k(ranked_docs, num_docs_to_retrieve)
+    answers = []
+    for q in queries_list:
+        query = p.parse_query(q)
+        searcher = Searcher(inverted_index, stemming, word2vec)
+        relevant_docs = searcher.relevant_docs_from_posting(query, word2vec)
+        ranked_docs = searcher.ranker.rank_relevant_doc(relevant_docs, query, word2vec)
+        answers.extend(searcher.ranker.retrieve_top_k(ranked_docs, num_docs_to_retrieve))
+    return answers
 
 
 def read_queries(queries):
@@ -150,16 +161,19 @@ def read_queries(queries):
     return content
 
 
+
 def main(corpus_path, output_path, stemming, queries, num_docs_to_retrieve):
-    # num_of_writes = run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve)
-    num_of_writes =21
+    word2vec = Word2vec()
+    num_of_writes = run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve, word2vec)
+    # num_of_writes =21
     union_posting_files(num_of_writes)
     print("finish union posting files: ", time.asctime(time.localtime(time.time())))
     if type(queries) != list:
         queries = read_queries(queries)
+
     # query = input("Please enter a query: ")
     # k = int(input("Please enter number of docs to retrieve: "))
     inverted_index = load_index()
-    rank_query = search_and_rank_query(queries, inverted_index, num_docs_to_retrieve, stemming)
+    rank_query = search_and_rank_query(queries, inverted_index, num_docs_to_retrieve, stemming, word2vec)
     for doc_tuple in rank_query:
         print('tweet id: {}, score (unique common words with query): {}'.format(doc_tuple[0], doc_tuple[1]))

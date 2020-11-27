@@ -7,10 +7,11 @@ import numpy
 
 class Word2vec:
     def __init__(self):
-        print("start: ", time.asctime(time.localtime(time.time())))
-        self.model = gensim.models.KeyedVectors.load_word2vec_format('GoogleNews-vectors-negative300.bin', binary=True)
+        # print("start: ", time.asctime(time.localtime(time.time())))
+        self.model = gensim.models.KeyedVectors.load_word2vec_format('GoogleNews-vectors-negative300.bin', binary=True, datatype=numpy.float16)
+        # self.model = gensim.models.KeyedVectors.load_word2vec_format('GoogleNews-vectors-negative300.bin', binary=True)
         # self.model = gensim.models.KeyedVectors.load_word2vec_format('GoogleNews-vectors-negative300.bin', binary=True, limit=2000000)
-        print("end: ", time.asctime(time.localtime(time.time())))
+        # print("end: ", time.asctime(time.localtime(time.time())))
 
     # def open_file(self):
     #     # with gzip.open('C:\\Users\\ASUS\\Desktop\\GoogleNews-vectors-negative300.bin.gz') as f_in:
@@ -53,8 +54,8 @@ class Word2vec:
 
         # print(self.model.wv['computer'])
 
-word2vec = Word2vec()
-# word2vec.get_most_similar_words(['woman', 'home'], 3)
-# w1 ='france'
-# w2 ='spain'
-word2vec.similarity()
+# word2vec = Word2vec()
+# dog = word2vec.model['dog']
+# print(dog)
+# print(word2vec.model.similarity('home','house'))
+# x=  np.mean(word2vec.model[words], axis=0

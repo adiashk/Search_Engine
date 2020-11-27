@@ -30,7 +30,7 @@ class Parse:
         index = 0
         while index < len(tokenized_text):
             term = tokenized_text[index]
-            term = self.remove_signs(term)
+            # term = self.remove_signs(term)
             if term == '':
                 index += 1
                 continue
@@ -67,7 +67,7 @@ class Parse:
         # text_tokens = word_tokenize(text)
         # text_tokens = TweetTokenizer().tokenize(text)
         # test = 'www.yu.il/it/ RT (RTAF!) ~? 3533 yuval'
-        text = re.sub('(?<=\D)[.,!?()~;]|[\u0080-\uFFFF]|[.,](?=\D)', '', text)
+        text = re.sub('(?<=\D)[.,!?()~:;"]|[\u0080-\uFFFF]|[.,](?=\D)', '', text)
         # test = re.sub('(?<=\D)[.,)(?:!]|[\u007B-\uFFFF]|[.,!](?=\D)', '', test)
         # test = re.compile(r"[a-zA-Z]+").findall(test)
         # mylist = ['spam', 'ham', 'eggs']
@@ -134,13 +134,12 @@ class Parse:
 
             if self.stemming:
                 term = self.convert_stemming(term)
-            if not to_delete_Hash:  # and not to_delete_URL:
-                if term not in term_dict.keys():
-                    term_dict[term] = 1
-                else:
-                    term_dict[term] += 1
-                doc_length += 1
-
+            if not to_delete_Hash:
+                if not to_delete_URL:
+                    if term not in term_dict.keys():
+                        term_dict[term] = 1
+                    else:
+                        term_dict[term] += 1
 
             index += (skip + 1)
 
@@ -415,7 +414,8 @@ class Parse:
                         break
                 index = next_index
                 if term.lower() not in self.stop_words:
-                    names.append(term)
+                    if ' ' in term:
+                        names.append(term)
             else:
                 index += 1
 

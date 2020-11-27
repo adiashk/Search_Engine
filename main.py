@@ -6,7 +6,7 @@ corpus_path = "C:\\Users\\ASUS\\Desktop\\files"
 output_path = None
 stemming = False
 queries = 'queries.txt'
-num_docs_to_retrieve = 5
+num_docs_to_retrieve = 10
 
 if __name__ == '__main__':
     search_engine.main(corpus_path, output_path, stemming, queries, num_docs_to_retrieve)
