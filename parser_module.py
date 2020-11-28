@@ -1,4 +1,5 @@
 import json
+import operator
 
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
@@ -29,7 +30,7 @@ class Parse:
         index = 0
         while index < len(tokenized_text):
             term = tokenized_text[index]
-            term = self.remove_signs(term)
+            # term = self.remove_signs(term)
             if term == '':
                 index += 1
                 continue
@@ -104,7 +105,7 @@ class Parse:
         # named_entity = self.Named_Entity_Recognition(full_text)
         tokenized_text = self.parse_sentence(full_text)
 
-        doc_length = len(tokenized_text)  # after text operations.
+        # doc_length = len(tokenized_text)  # after text operations.
 
         # for term in tokenized_text:  # enumerate---------------->
         tokenized_text_len = len(tokenized_text)
@@ -114,6 +115,7 @@ class Parse:
         skip = 0
         temp_split_hashtag = []
         index = 0
+        doc_length = 0
         while index < len(tokenized_text):
             term = tokenized_text[index]
             term = self.remove_signs(term)
@@ -132,7 +134,7 @@ class Parse:
 
             if self.stemming:
                 term = self.convert_stemming(term)
-            if not to_delete_Hash:  # and not to_delete_URL:
+            if not to_delete_Hash:
                 if not to_delete_URL:
                     if term not in term_dict.keys():
                         term_dict[term] = 1
@@ -157,9 +159,18 @@ class Parse:
             else:
                 term_dict[term] += 1
 
+        doc_length = doc_length + len(temp_split_url) + len(temp_split_hashtag)
+
+        amount_of_unique_words = len(term_dict)
+
+        if len(term_dict) > 0:
+            most_frequent_term = max(term_dict, key=term_dict.get)
+            max_tf = term_dict[most_frequent_term]
+        else:
+            max_tf = 0
 
         document = Document(tweet_id, tweet_date, full_text, url, retweet_text, retweet_url, quote_text,
-                            quote_url, term_dict, doc_length, self.named_entity)
+                            quote_url, term_dict, doc_length,amount_of_unique_words, max_tf, self.named_entity)
         return document
 
     def remove_signs(self, term):
@@ -240,7 +251,7 @@ class Parse:
             return []
 
     def convert_url(self, term, temp_split_url):
-        if "http" in term or "https" in term:
+        if "http" in term:
             if len(temp_split_url) > 0:  # there was long URL
                 return temp_split_url, True
 
@@ -403,7 +414,8 @@ class Parse:
                         break
                 index = next_index
                 if term.lower() not in self.stop_words:
-                    names.append(term)
+                    if ' ' in term:
+                        names.append(term)
             else:
                 index += 1
 
