@@ -150,8 +150,8 @@ def read_queries(queries):
 
 
 def main(corpus_path, output_path, stemming, queries, num_docs_to_retrieve):
-    # num_of_writes = run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve)
-    num_of_writes =21
+    num_of_writes = run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve)
+    # num_of_writes =21
     union_posting_files(num_of_writes)
     print("finish union posting files: ", time.asctime(time.localtime(time.time())))
     if type(queries) != list:

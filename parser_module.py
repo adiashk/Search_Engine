@@ -66,7 +66,7 @@ class Parse:
         # text_tokens = word_tokenize(text)
         # text_tokens = TweetTokenizer().tokenize(text)
         # test = 'www.yu.il/it/ RT (RTAF!) ~? 3533 yuval'
-        text = re.sub('(?<=\D)[.,!?()~;]|[\u0080-\uFFFF]|[.,](?=\D)', '', text)
+        text = re.sub('(?<=\D)[.,!?()~:;"]|[\u0080-\uFFFF]|[.,](?=\D)', '', text)
         # test = re.sub('(?<=\D)[.,)(?:!]|[\u007B-\uFFFF]|[.,!](?=\D)', '', test)
         # test = re.compile(r"[a-zA-Z]+").findall(test)
         # mylist = ['spam', 'ham', 'eggs']
@@ -133,10 +133,11 @@ class Parse:
             if self.stemming:
                 term = self.convert_stemming(term)
             if not to_delete_Hash:  # and not to_delete_URL:
-                if term not in term_dict.keys():
-                    term_dict[term] = 1
-                else:
-                    term_dict[term] += 1
+                if not to_delete_URL:
+                    if term not in term_dict.keys():
+                        term_dict[term] = 1
+                    else:
+                        term_dict[term] += 1
 
             index += (skip + 1)
 
@@ -239,7 +240,7 @@ class Parse:
             return []
 
     def convert_url(self, term, temp_split_url):
-        if "http" in term:
+        if "http" in term or "https" in term:
             if len(temp_split_url) > 0:  # there was long URL
                 return temp_split_url, True
 
