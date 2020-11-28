@@ -30,7 +30,7 @@ def run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve
     r = ReadFile(corpus_path=config.get__corpusPath())
     p = Parse(stemming)
     indexer = Indexer(config, word2vec)
-    # documents_list = r.read_file(file_name='covid19_07-11.snappy.parquet')  # TODO - handel all files ~50 (can do with from multiprocessing.pool import ThreadPool)
+    # documents_list = r.read_file(file_name='covid19_07-30.snappy.parquet')  # TODO - handel all files ~50 (can do with from multiprocessing.pool import ThreadPool)
 
     # Iterate over every document in the file
     counter = 0
@@ -39,6 +39,8 @@ def run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve
         documents_list = r.read_file(file_name=str(name))
         for idx, document in enumerate(documents_list):
             parsed_document = p.parse_doc(document)  # parse the document
+            if parsed_document == {}:
+                continue
             # parsed_document.add_doc_vector(word2vec)
             # parsed_document.get_mean_vector(word2vec)
             number_of_documents += 1

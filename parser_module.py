@@ -103,6 +103,9 @@ class Parse:
         term_dict = {}
         named_entity = None
         # named_entity = self.Named_Entity_Recognition(full_text)
+        if full_text[0] == 'R' and full_text[1] == 'T':
+            return {}
+
         tokenized_text = self.parse_sentence(full_text)
 
         # doc_length = len(tokenized_text)  # after text operations.
@@ -116,9 +119,13 @@ class Parse:
         temp_split_hashtag = []
         index = 0
         doc_length = 0
+        counter_rt=0
         while index < len(tokenized_text):
             term = tokenized_text[index]
             term = self.remove_signs(term)
+            # if term == 'RT' or term == 'rt':
+            #     counter_rt += 1
+            #     break
             if term == '':
                 index += 1
                 continue
