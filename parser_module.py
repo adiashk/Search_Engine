@@ -402,12 +402,16 @@ class Parse:
         while index < len(text_tokens):
             term = text_tokens[index]
             if len(term) > 0 and term[0].isupper():
+            # if len(term) > 0 and (term[0].isupper() or term[0].isdigit()):
                 next_index = index + 1
                 while next_index < len(text_tokens):
                     next_term = text_tokens[next_index]
                     if len(next_term) > 0 and next_term[0].isupper():
+                    # if len(next_term) > 0 and (next_term[0].isupper() or next_term[0].isdigit()):
                         if '-' in next_term:
                             next_term = next_term.replace('-', ' ')
+                        if term[0].isdigit() and next_term[0].isdigit():
+                            continue
                         term += ' ' + next_term  # add the next word
                         next_index += 1
                     else:

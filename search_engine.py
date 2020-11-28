@@ -48,7 +48,7 @@ def run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve
             if counter >= 500000:
                 write_and_clean_buffer(indexer, num_of_writes)
                 counter = 0
-                print("finish parser & index number: ",num_of_writes, " At: ", time.asctime(time.localtime(time.time())))
+                print("finish parser & index number: ", num_of_writes, " At: ", time.asctime(time.localtime(time.time())))
                 num_of_writes += 1
         #print('Finished parsing and indexing. Starting to export files')
     write_and_clean_buffer(indexer, num_of_writes)
@@ -78,6 +78,7 @@ def write_and_clean_buffer(indexer, write_number):
     indexer.postingDict = {}
     indexer.postingDict = defaultdict(list)
 
+    # documents_dict_no_duplicates = remove_duplicates(indexer.documents_dict)
     save_path = str(path) + '\\documents\\'
     if not os.path.exists(os.path.dirname(save_path)):
         os.makedirs(os.path.dirname(save_path))
@@ -86,6 +87,16 @@ def write_and_clean_buffer(indexer, write_number):
 
     indexer.documents_dict = {}
     indexer.documents_dict = defaultdict(list)
+
+def remove_duplicates(documents_dict):
+    # ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
+    temp = []
+    res = dict()
+    for key, val in documents_dict.items():
+        if val not in temp:
+            temp.append(val)
+            res[key] = val
+    return res
 
 def union_posting_files(num_of_writes):
     # inverted_index = utils.load_obj("inverted_idx")

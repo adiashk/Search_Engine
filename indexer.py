@@ -9,7 +9,7 @@ class Indexer:
         self.config = config
         self.documents_dict = defaultdict(list)
         self.extra_stop_words = ['rt', 'www', 'http', 'https', 'tco', 'didnt', 'dont']
-        self.word2vec= word2vec
+        self.word2vec = word2vec
 
     def add_new_doc(self, document, num_of_writes):
         """

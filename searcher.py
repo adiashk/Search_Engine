@@ -63,7 +63,9 @@ class Searcher:
                     #TODO- search term.lower & term.upper
                     tweet_id = doc[0]
                     if tweet_id not in relevant_docs.keys():
-                        relevant_docs[tweet_id] = doc[2]
+                        relevant_docs[tweet_id] = (1, doc[2])
+                    else:  # this doc contain more than one term from the query
+                        relevant_docs[doc][0] += 1
             except:
                 pass
 
