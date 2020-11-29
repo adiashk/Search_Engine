@@ -1,5 +1,6 @@
 import pathlib
 import re
+import time
 
 from parser_module import Parse
 from ranker import Ranker
@@ -39,6 +40,7 @@ class Searcher:
         # query_and_similar.extend(query)
         # query_and_similar.extend(similar_words)
         # posting = utils.load_obj("posting")
+        print("start relevant At: ", time.asctime(time.localtime(time.time())))
 
         posting = {}
         relevant_docs = {}
@@ -63,18 +65,16 @@ class Searcher:
                     #TODO- search term.lower & term.upper
                     tweet_id = doc[0]
                     if tweet_id not in relevant_docs.keys():
-                        relevant_docs[tweet_id] = (1, doc[2])
-                    else:
+                        relevant_docs[tweet_id] = [1, doc[2]]
+                    else:  # this doc contain more than one term from the query
                         relevant_docs[tweet_id][0] += 1
-
             except:
                 pass
-
-        relevant_docs = sorted(relevant_docs.items(), key=lambda x: x[1], reverse=True)
-
-        relevant_docs = dict(list(relevant_docs.items())[0: 2000])
-        return relevant_docs
-
+        min_len = min(2000, len(relevant_docs))
+        # relevant_docs_sorted = dict(sorted(relevant_docs.items(), key=lambda x: x[1][0], reverse=True))
+        relevant_docs_sorted = dict(sorted(relevant_docs.items(), key=lambda x: x[1][0], reverse=True)[:min_len])
+        print("finish relevant At: ", time.asctime(time.localtime(time.time())))
+        return relevant_docs_sorted
 
 
 

@@ -50,7 +50,7 @@ def run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve
             if counter >= 500000:
                 write_and_clean_buffer(indexer, num_of_writes)
                 counter = 0
-                print("finish parser & index number: ",num_of_writes, " At: ", time.asctime(time.localtime(time.time())))
+                print("finish parser & index number: ", num_of_writes, " At: ", time.asctime(time.localtime(time.time())))
                 num_of_writes += 1
         #print('Finished parsing and indexing. Starting to export files')
     write_and_clean_buffer(indexer, num_of_writes)
@@ -80,6 +80,7 @@ def write_and_clean_buffer(indexer, write_number):
     indexer.postingDict = {}
     indexer.postingDict = defaultdict(list)
 
+    # documents_dict_no_duplicates = remove_duplicates(indexer.documents_dict)
     save_path = str(path) + '\\documents\\'
     if not os.path.exists(os.path.dirname(save_path)):
         os.makedirs(os.path.dirname(save_path))
@@ -88,6 +89,16 @@ def write_and_clean_buffer(indexer, write_number):
 
     indexer.documents_dict = {}
     indexer.documents_dict = defaultdict(list)
+
+def remove_duplicates(documents_dict):
+    # ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
+    temp = []
+    res = dict()
+    for key, val in documents_dict.items():
+        if val not in temp:
+            temp.append(val)
+            res[key] = val
+    return res
 
 def union_posting_files(num_of_writes):
     # inverted_index = utils.load_obj("inverted_idx")
@@ -145,18 +156,19 @@ def load_index():
 
 def search_and_rank_query(queries_list, inverted_index, num_docs_to_retrieve, stemming, word2vec):
     p = Parse(stemming)
-    answers = []
-    for q in queries_list:
+    answers = defaultdict(list)
+    for i, q in enumerate(queries_list):
         query = p.parse_query(q)
         searcher = Searcher(inverted_index, stemming, word2vec)
         relevant_docs = searcher.relevant_docs_from_posting(query, word2vec)
         ranked_docs = searcher.ranker.rank_relevant_doc(relevant_docs, query, word2vec)
-        answers.extend(searcher.ranker.retrieve_top_k(ranked_docs, num_docs_to_retrieve))
+        answers[i] = searcher.ranker.retrieve_top_k(ranked_docs, num_docs_to_retrieve)
     return answers
 
 
 def read_queries(queries):
-    with open(queries) as f:
+    # with open(queries) as f:
+    with open(queries, encoding="utf8") as f:
         content = f.readlines()
     # you may also want to remove whitespace characters like `\n` at the end of each line
     content = [x.strip() for x in content]
@@ -166,12 +178,7 @@ def read_queries(queries):
 
 def main(corpus_path, output_path, stemming, queries, num_docs_to_retrieve):
     word2vec = Word2vec()
-    # word2vec.model.wv.vector_size = 100
-
-    # word2vec.save("word2vec.model")
-    # word2vec.model.vectors.shape[1] = 100
-    # num_of_writes = run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve, word2vec)
-    num_of_writes =6
+    num_of_writes = run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve, word2vec)
     union_posting_files(num_of_writes)
     print("finish union posting files: ", time.asctime(time.localtime(time.time())))
     if type(queries) != list:
@@ -181,5 +188,7 @@ def main(corpus_path, output_path, stemming, queries, num_docs_to_retrieve):
     # k = int(input("Please enter number of docs to retrieve: "))
     inverted_index = load_index()
     rank_query = search_and_rank_query(queries, inverted_index, num_docs_to_retrieve, stemming, word2vec)
-    for doc_tuple in rank_query:
-        print('tweet id: {}, score (unique common words with query): {}'.format(doc_tuple[0], doc_tuple[1]))
+    for i in rank_query:
+        print("Query number ", i, " results: ")
+        for doc_tuple in rank_query[i]:
+            print('tweet id: {}, similarity: {}'.format(doc_tuple[0], doc_tuple[1]))
