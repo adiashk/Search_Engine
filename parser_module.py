@@ -21,6 +21,7 @@ class Parse:
         self.stop_words = stopwords.words('english')
         self.stemming = stemming
         self.named_entity = None
+        self.re_tweet_set = set()
 
     def parse_query(self, query):
         tokenized_text = self.parse_sentence(query)
@@ -96,15 +97,30 @@ class Parse:
         tweet_date = doc_as_list[1]
         full_text = doc_as_list[2]
         url = doc_as_list[3]
-        retweet_text = doc_as_list[4]
-        retweet_url = doc_as_list[5]
-        quote_text = doc_as_list[6]
-        quote_url = doc_as_list[7]
+        indices = doc_as_list[4]
+        retweet_text = doc_as_list[5]
+        retweet_url = doc_as_list[6]
+        retweet_indices = doc_as_list[7]
+        quote_text = doc_as_list[8]
+        quote_url = doc_as_list[9]
+        quote_indices = doc_as_list[10]
+        retweet_quoted_text = doc_as_list[11]
+        retweet_quoted_urls = doc_as_list[12]
+        retweet_quoted_indices = doc_as_list[13]
         term_dict = {}
         named_entity = None
         # named_entity = self.Named_Entity_Recognition(full_text)
+
         if full_text[0] == 'R' and full_text[1] == 'T':
-            return {}
+            if retweet_url is not None:
+                last_slash_index = retweet_url.rfind('/')
+                if last_slash_index > 0:
+                    original_tweet_id = retweet_url[last_slash_index+1:len(retweet_url)-2]
+                    if len(original_tweet_id) > 0 and original_tweet_id.isdigit():
+                        if original_tweet_id not in self.re_tweet_set:
+                            self.re_tweet_set.add(original_tweet_id)
+                        else:
+                            return {}
 
         tokenized_text = self.parse_sentence(full_text)
 
@@ -417,8 +433,8 @@ class Parse:
                     # if len(next_term) > 0 and (next_term[0].isupper() or next_term[0].isdigit()):
                         if '-' in next_term:
                             next_term = next_term.replace('-', ' ')
-                        if term[0].isdigit() and next_term[0].isdigit():
-                            continue
+                        # if term[0].isdigit() and next_term[0].isdigit():
+                        #     continue
                         term += ' ' + next_term  # add the next word
                         next_index += 1
                     else:

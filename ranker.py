@@ -23,12 +23,12 @@ class Ranker:
         # return sorted(relevant_doc.items(), key=lambda item: item[1], reverse=True)
         similarity_dictionary = defaultdict(float)
         query_vector = self.get_doc_vector(query, word2vec)
-        relevant_docs_sorted = dict(sorted(relevant_docs.items(), key=lambda x: x[1]))
+        # relevant_docs_sorted = dict(sorted(relevant_docs.items(), key=lambda x: x[1]))
         path = pathlib.Path().absolute()
         save_path = str(path) + '\\documents\\'
         temp_num = 0
-        for tweet_id_in_relevant_doc in relevant_docs_sorted:
-            num_of_writes = relevant_docs_sorted[tweet_id_in_relevant_doc]
+        for tweet_id_in_relevant_doc in relevant_docs:
+            num_of_writes = relevant_docs[tweet_id_in_relevant_doc][1]
             if temp_num != num_of_writes:  # load new file
                 temp_num = num_of_writes
                 filename = str(save_path + str(num_of_writes))
@@ -36,8 +36,9 @@ class Ranker:
             for tweet_id in docs_dictionary:  # all the docs in this file
                 if tweet_id == tweet_id_in_relevant_doc:
                     doc_tuple = docs_dictionary[tweet_id_in_relevant_doc]
-                    dec_vector = doc_tuple[0][2]
-                    sim = numpy.dot(dec_vector, query_vector)/((numpy.linalg.norm(dec_vector) * numpy.linalg.norm(query_vector)))
+                    term_doc = doc_tuple[0][2]
+                    doc_vector = self.get_doc_vector(term_doc, word2vec)
+                    sim = numpy.dot(doc_vector, query_vector)/((numpy.linalg.norm(doc_vector) * numpy.linalg.norm(query_vector)))
                     similarity_dictionary[tweet_id_in_relevant_doc] = sim
                     break
         print("finish similarity At: ", time.asctime(time.localtime(time.time())))

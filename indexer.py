@@ -77,7 +77,8 @@ class Indexer:
     def add_doc_to_dict(self, document):
         # doc_words_list = self.get_doc_words(document, word2vec)
         get_doc_vector = self.get_doc_vector(document)
-        self.documents_dict[document.tweet_id].append((document.amount_of_unique_words, document.max_tf, get_doc_vector))
+        # self.documents_dict[document.tweet_id].append((document.amount_of_unique_words, document.max_tf, get_doc_vector))
+        self.documents_dict[document.tweet_id].append((document.amount_of_unique_words, document.max_tf, document.term_doc_dictionary))
 
     def get_doc_words(self, document):
         doc_words_list = []
