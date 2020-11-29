@@ -166,8 +166,12 @@ def read_queries(queries):
 
 def main(corpus_path, output_path, stemming, queries, num_docs_to_retrieve):
     word2vec = Word2vec()
-    num_of_writes = run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve, word2vec)
-    # num_of_writes =21
+    # word2vec.model.wv.vector_size = 100
+
+    # word2vec.save("word2vec.model")
+    # word2vec.model.vectors.shape[1] = 100
+    # num_of_writes = run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve, word2vec)
+    num_of_writes =6
     union_posting_files(num_of_writes)
     print("finish union posting files: ", time.asctime(time.localtime(time.time())))
     if type(queries) != list:

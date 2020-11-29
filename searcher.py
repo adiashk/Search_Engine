@@ -63,11 +63,18 @@ class Searcher:
                     #TODO- search term.lower & term.upper
                     tweet_id = doc[0]
                     if tweet_id not in relevant_docs.keys():
-                        relevant_docs[tweet_id] = doc[2]
+                        relevant_docs[tweet_id] = (1, doc[2])
+                    else:
+                        relevant_docs[tweet_id][0] += 1
+
             except:
                 pass
 
+        relevant_docs = sorted(relevant_docs.items(), key=lambda x: x[1], reverse=True)
+
+        relevant_docs = dict(list(relevant_docs.items())[0: 2000])
         return relevant_docs
+
 
 
 

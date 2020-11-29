@@ -92,7 +92,10 @@ class Indexer:
         avg_vec = []
         for term in document.term_doc_dictionary:
             if term in self.word2vec.model.wv.vocab:
-                doc_vec += self.word2vec.model[str(term)]
+                # new_vec = self.word2vec.models.word2vec([str(term)], 100)
+                new_vec = self.word2vec.model[str(term)]
+
+                doc_vec += new_vec
                 counter += 1
             if counter > 0:
                 avg_vec = doc_vec / counter
