@@ -68,6 +68,7 @@ class Parse:
         # text_tokens = word_tokenize(text)
         # text_tokens = TweetTokenizer().tokenize(text)
         # test = 'www.yu.il/it/ RT (RTAF!) ~? 3533 yuval'
+        self.named_entity = self.Named_Entity_Recognition(text)
         text = re.sub('(?<=\D)[.,!?()~:;"]|[\u0080-\uFFFF]|[.,](?=\D)', '', text)
         # test = re.sub('(?<=\D)[.,)(?:!]|[\u007B-\uFFFF]|[.,!](?=\D)', '', test)
         # test = re.compile(r"[a-zA-Z]+").findall(test)
@@ -80,7 +81,8 @@ class Parse:
         # text_tokens = WhitespaceTokenizer().tokenize(text)
         text_tokens = text.split(" ")
 
-        self.named_entity = self.Named_Entity_Recognition(text_tokens)
+        # self.named_entity = self.Named_Entity_Recognition(text_tokens)
+        # self.named_entity = self.Named_Entity_Recognition(text)
 
         # text_tokens_without_stopwords = [w.lower() for w in text_tokens if w not in self.stop_words]
         text_tokens_without_stopwords = [w for w in text_tokens if w.lower() not in self.stop_words and len(w) > 0]
@@ -416,38 +418,101 @@ class Parse:
         return term, skip
 
 
-    def Named_Entity_Recognition(self, text_tokens):
+    # def Named_Entity_Recognition(self, text_tokens):
+    #     names = []
+    #     # upper_words = re.compile(r"[A-Z][a-z]+|[A-Z]+(?![a-z])").findall(text)
+    #     # upper_words = [w for w in text_tokens if w[0].isupper() and len(w) > 0]
+    #     upper_words = []
+    #     index = 0
+    #     while index < len(text_tokens):
+    #         term = text_tokens[index]
+    #         if len(term) > 0 and term[0].isupper():
+    #         # if len(term) > 0 and (term[0].isupper() or term[0].isdigit()):
+    #             next_index = index + 1
+    #             while next_index < len(text_tokens):
+    #                 next_term = text_tokens[next_index]
+    #                 if len(next_term) > 0 and next_term[0].isupper():
+    #                 # if len(next_term) > 0 and (next_term[0].isupper() or next_term[0].isdigit()):
+    #                     if '-' in next_term:
+    #                         next_term = next_term.replace('-', ' ')
+    #                     # if term[0].isdigit() and next_term[0].isdigit():
+    #                     #     continue
+    #                     term += ' ' + next_term  # add the next word
+    #                     next_index += 1
+    #                 else:
+    #                     break
+    #             index = next_index
+    #             if term.lower() not in self.stop_words:
+    #                 if ' ' in term:
+    #                     names.append(term)
+    #         else:
+    #             index += 1
+    #
+    #     counter_names = Counter(names)
+    #     return counter_names
+
+
+    def Named_Entity_Recognition(self, text):
+
+        # update_text = re.sub('(?<=\D)[!?()~:;]|[\u0080-\uFFFF]|(?:\s)http[^, ]*|(?:\s)[a-z][^, ]*|(?:\s)#[^, ]*|(?:\s)@[^, ]*|[!?()~:;](?=\D)', '', text)
+        update_text = re.sub('(?<=\D)[!?()~"”“:;]|[\u0080-\uFFFF]|[\u201C]|[!?()~:;](?=\D)', '', text)
+        update_text = re.sub('(?:\s)http[^, ]*|(?:\s)[a-z][^, ]*|(?:\s)#[^, ]*|(?:\s)&[^, ]*|@\w*\s*|#\w*\s*|', '', text)
+
+        update_text = update_text.replace('\n', ' ')
+        update_text = update_text.replace('\t', ' ')
+        # update_text = update_text.replace('-', ' ')
+        update_text = update_text.replace("RT", '')
+        update_text = update_text.replace(':', '')
+        update_text = update_text.replace("”", '')
+        update_text = update_text.replace('"', '')
+        char = "'"
+        update_text = update_text.replace(char, ' ')
+        # text_tokens = WhitespaceTokenizer().tokenize(text)
+        text_tokens = update_text.split(" ")
+        text_tokens = [i for i in text_tokens if i]
+        text_tokens = [i for i in text_tokens if i.isascii() and (i[0].isdigit() or i[0].isupper())]
+        origin = text.split(" ")
+
         names = []
-        # upper_words = re.compile(r"[A-Z][a-z]+|[A-Z]+(?![a-z])").findall(text)
-        # upper_words = [w for w in text_tokens if w[0].isupper() and len(w) > 0]
-        upper_words = []
-        index = 0
-        while index < len(text_tokens):
-            term = text_tokens[index]
-            if len(term) > 0 and term[0].isupper():
-            # if len(term) > 0 and (term[0].isupper() or term[0].isdigit()):
-                next_index = index + 1
-                while next_index < len(text_tokens):
-                    next_term = text_tokens[next_index]
-                    if len(next_term) > 0 and next_term[0].isupper():
-                    # if len(next_term) > 0 and (next_term[0].isupper() or next_term[0].isdigit()):
-                        if '-' in next_term:
-                            next_term = next_term.replace('-', ' ')
-                        # if term[0].isdigit() and next_term[0].isdigit():
-                        #     continue
-                        term += ' ' + next_term  # add the next word
-                        next_index += 1
+        index_in_text_tokens = 0
+        index_in_origin = 0
+
+        while index_in_text_tokens < len(text_tokens):
+            term = text_tokens[index_in_text_tokens]
+            if term.isascii():
+                new_term = term
+            else:
+                index_in_text_tokens += 1
+                continue
+            while index_in_origin < len(origin) and term not in origin[index_in_origin]:
+                index_in_origin += 1
+            # upper_words.append(term)
+            next_index_in_text_tokens = index_in_text_tokens + 1
+            index_in_origin += 1 #location of next term
+            if len(text_tokens)-next_index_in_text_tokens > 0:
+                # next_index += 1
+                next_term = text_tokens[next_index_in_text_tokens]
+                while index_in_origin < len(origin) and len(text_tokens)-next_index_in_text_tokens > 0 and next_term in origin[index_in_origin]:
+                    # upper_words.append(next_term)
+                    new_term += ' ' + next_term
+                    next_index_in_text_tokens += 1
+                    if len(text_tokens) - next_index_in_text_tokens > 0:
+                        next_term = text_tokens[next_index_in_text_tokens]
+                        index_in_origin += 1
                     else:
                         break
-                index = next_index
-                if term.lower() not in self.stop_words:
-                    if ' ' in term:
-                        names.append(term)
-            else:
-                index += 1
+            if len(new_term.split(" ")) > 1:
+                new_term = new_term.replace('-', ' ')
+                temp_new_term = new_term.split(" ")
+                if temp_new_term[0].isdigit():
+                    names.append(new_term) #with numbers
+                    new_term = new_term.replace(str(temp_new_term[0]) + ' ', '')
+                    names.append(new_term)  # without numbers
+                else:
+                    names.append(new_term)
+            index_in_text_tokens = next_index_in_text_tokens
 
-        counter_names = Counter(names)
-        return counter_names
+        return Counter(names)
 
 
     def convert_stemming(self, term):
