@@ -20,7 +20,7 @@ class Searcher:
         self.word2vec = word2vec
 
 
-    def relevant_docs_from_posting(self, query, word2vec):
+    def relevant_docs_from_posting(self, query, stemming):
         """
         This function loads the posting list and count the amount of relevant documents per term.
         :param query: query
@@ -46,7 +46,11 @@ class Searcher:
         relevant_docs = {}
         query_set = set(query)
         path = pathlib.Path().absolute()
-        save_path = str(path) + '\\posting\\'
+        if stemming:
+            save_path = str(path) + '\\posting_stem\\'
+        else:
+            save_path = str(path) + '\\posting\\'
+
         temp_letter = ''
         for term in query_set:
             letter = term[0].lower()
