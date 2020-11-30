@@ -12,7 +12,7 @@ class Ranker:
     def __init__(self):
         pass
 
-    def rank_relevant_doc(self, relevant_docs, query, word2vec):  # {tweet_id: num_of_writes, tweet_id: num_of_writes}
+    def rank_relevant_doc(self, relevant_docs, query, word2vec, stemming):  # {tweet_id: num_of_writes, tweet_id: num_of_writes}
         """
         This function provides rank for each relevant document and sorts them by their scores.
         The current score considers solely the number of terms shared by the tweet (full_text) and query.
@@ -23,12 +23,16 @@ class Ranker:
         # return sorted(relevant_doc.items(), key=lambda item: item[1], reverse=True)
         similarity_dictionary = defaultdict(float)
         query_vector = self.get_doc_vector(query, word2vec)
-        # relevant_docs_sorted = dict(sorted(relevant_docs.items(), key=lambda x: x[1]))
+        relevant_docs_sorted = dict(sorted(relevant_docs.items(), key=lambda x: x[1][1]))
         path = pathlib.Path().absolute()
-        save_path = str(path) + '\\documents\\'
+        if stemming:
+            save_path = str(path) + '\\documents_stem\\'
+        else:
+            save_path = str(path) + '\\documents\\'
+
         temp_num = 0
-        for tweet_id_in_relevant_doc in relevant_docs:
-            num_of_writes = relevant_docs[tweet_id_in_relevant_doc][1]
+        for tweet_id_in_relevant_doc in relevant_docs_sorted:
+            num_of_writes = relevant_docs_sorted[tweet_id_in_relevant_doc][1]
             if temp_num != num_of_writes:  # load new file
                 temp_num = num_of_writes
                 filename = str(save_path + str(num_of_writes))
@@ -38,7 +42,11 @@ class Ranker:
                     doc_tuple = docs_dictionary[tweet_id_in_relevant_doc]
                     term_doc = doc_tuple[0][2]
                     doc_vector = self.get_doc_vector(term_doc, word2vec)
-                    sim = numpy.dot(doc_vector, query_vector)/((numpy.linalg.norm(doc_vector) * numpy.linalg.norm(query_vector)))
+                    try:
+                        sim = numpy.dot(doc_vector, query_vector)/((numpy.linalg.norm(doc_vector) * numpy.linalg.norm(query_vector)))
+                    except:
+                        continue
+
                     similarity_dictionary[tweet_id_in_relevant_doc] = sim
                     break
         print("finish similarity At: ", time.asctime(time.localtime(time.time())))
