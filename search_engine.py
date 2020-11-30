@@ -1,3 +1,4 @@
+import csv
 import errno
 import os
 import pathlib
@@ -188,8 +189,8 @@ def read_queries(queries):
 
 def main(corpus_path, output_path, stemming, queries, num_docs_to_retrieve):
     word2vec = Word2vec()
-    # num_of_writes = run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve, word2vec)
-    # union_posting_files(num_of_writes, stemming)
+    num_of_writes = run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve, word2vec)
+    union_posting_files(num_of_writes, stemming)
     print("finish union posting files: ", time.asctime(time.localtime(time.time())))
     if type(queries) != list:
         queries = read_queries(queries)
@@ -198,7 +199,13 @@ def main(corpus_path, output_path, stemming, queries, num_docs_to_retrieve):
     # k = int(input("Please enter number of docs to retrieve: "))
     inverted_index = load_index()
     rank_query = search_and_rank_query(queries, inverted_index, num_docs_to_retrieve, stemming, word2vec)
+    with open('results.csv', 'a', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(["Query_num", "Tweet_id", "Rank"])
     for i in rank_query:
-        print("Query number ", i + 1, " results: ")
+        # print("Query number ", i + 1, " results: ")
         for doc_tuple in rank_query[i]:
-            print('tweet id: {}, similarity: {}'.format(doc_tuple[0], doc_tuple[1]))
+            # print('tweet id: {}, similarity: {}'.format(doc_tuple[0], doc_tuple[1]))
+            with open('results.csv', 'a', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow([i+1, doc_tuple[0], doc_tuple[1]])
