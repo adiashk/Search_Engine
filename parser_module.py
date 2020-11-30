@@ -470,7 +470,10 @@ class Parse:
         # text_tokens = WhitespaceTokenizer().tokenize(text)
         text_tokens = update_text.split(" ")
         text_tokens = [i for i in text_tokens if i]
-        text_tokens = [i for i in text_tokens if i.isascii() and (i[0].isdigit() or i[0].isupper())]
+        for term in text_tokens:
+            if term[0] == "“":
+                term = term[1:len(term)]
+        text_tokens = [i for i in text_tokens if i.isascii()  and (i[0].isdigit() or i[0].isupper())]
         origin = text.split(" ")
 
         names = []
@@ -501,8 +504,8 @@ class Parse:
                         index_in_origin += 1
                     else:
                         break
-            if len(new_term.split(" ")) > 1:
-                new_term = new_term.replace('-', ' ')
+            if new_term.find(" ") != -1:
+                # new_term = new_term.replace('-', ' ')
                 temp_new_term = new_term.split(" ")
                 if temp_new_term[0].isdigit():
                     names.append(new_term) #with numbers
