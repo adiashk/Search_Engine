@@ -195,9 +195,12 @@ def main(corpus_path, output_path, stemming, queries, num_docs_to_retrieve):
     if type(queries) != list:
         queries = read_queries(queries)
 
-    # query = input("Please enter a query: ")
-    # k = int(input("Please enter number of docs to retrieve: "))
+    query = input("Please enter a query: ")
+    k = int(input("Please enter number of docs to retrieve: "))
     inverted_index = load_index()
+    # temp = dict(sorted(inverted_index.items(), key=lambda item: item[1].isdigit(), reverse=False))
+    # temp = dict(sorted(inverted_index.items(), reverse=True))
+
     rank_query = search_and_rank_query(queries, inverted_index, num_docs_to_retrieve, stemming, word2vec)
     with open('results.csv', 'a', newline='') as f:
         writer = csv.writer(f)

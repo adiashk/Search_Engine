@@ -9,6 +9,9 @@ class Word2vec:
     def __init__(self):
         # print("start: ", time.asctime(time.localtime(time.time())))
         self.model = gensim.models.KeyedVectors.load_word2vec_format('GoogleNews-vectors-negative300.bin', binary=True, datatype=numpy.float16)
+        # self.model.wv.vector_size = 100
+        # self.model.__init__(100)
+
         # self.model = gensim.models.KeyedVectors.load_word2vec_format('GoogleNews-vectors-negative300.bin', binary=True)
         # self.model = gensim.models.KeyedVectors.load_word2vec_format('GoogleNews-vectors-negative300.bin', binary=True, limit=2000000)
         # print("end: ", time.asctime(time.localtime(time.time())))

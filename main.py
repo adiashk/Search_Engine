@@ -2,11 +2,11 @@ import search_engine
 
 
 # corpus_path = "C:\\Users\\ASUS\\Desktop\\Data"
-corpus_path = "C:\\Users\\ASUS\\Desktop\\files"
-# corpus_path = "C:\\Users\\Yuval Mor Yosef\\Desktop\\יובל מור יוסף\\בן גוריון\\סמסטר ה\\אחזור\\Data"
+# corpus_path = "C:\\Users\\Yuval Mor Yosef\\Desktop\\files"
+corpus_path = "C:\\Users\\Yuval Mor Yosef\\Desktop\\יובל מור יוסף\\בן גוריון\\סמסטר ה\\אחזור\\Data"
 output_path = None
-stemming = True
-queries = 'queries2.txt'
+stemming = False
+queries = 'queries.txt'
 num_docs_to_retrieve = 5
 
 if __name__ == '__main__':
