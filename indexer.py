@@ -8,7 +8,7 @@ class Indexer:
         self.named_entity_idx = defaultdict(list)
         self.config = config
         self.documents_dict = defaultdict(list)
-        self.extra_stop_words = ['rt', 'www', 'http', 'https', 'tco', 'didnt', 'dont']
+        self.extra_stop_words = ['rt', 'www', 'http', 'https', 'tco', 'didnt', 'dont', 'twitter.com']
         self.word2vec = word2vec
 
     def add_new_doc(self, document, num_of_writes):
@@ -78,7 +78,7 @@ class Indexer:
         # doc_words_list = self.get_doc_words(document, word2vec)
         get_doc_vector = self.get_doc_vector(document)
         # self.documents_dict[document.tweet_id].append((document.amount_of_unique_words, document.max_tf, get_doc_vector))
-        self.documents_dict[document.tweet_id].append((document.amount_of_unique_words, document.max_tf, document.term_doc_dictionary))
+        self.documents_dict[document.tweet_id].append((document.amount_of_unique_words, document.max_tf, document.term_doc_dictionary, document.most_frequent_term))
 
     def get_doc_words(self, document):
         doc_words_list = []

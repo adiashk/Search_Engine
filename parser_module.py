@@ -144,7 +144,7 @@ class Parse:
             # if term == 'RT' or term == 'rt':
             #     counter_rt += 1
             #     break
-            if term == '':
+            if term == '' or not term.isascii():
                 index += 1
                 continue
 
@@ -191,11 +191,13 @@ class Parse:
         if len(term_dict) > 0:
             most_frequent_term = max(term_dict, key=term_dict.get)
             max_tf = term_dict[most_frequent_term]
+
         else:
+            most_frequent_term = ""
             max_tf = 0
 
         document = Document(tweet_id, tweet_date, full_text, url, retweet_text, retweet_url, quote_text,
-                            quote_url, term_dict, doc_length,amount_of_unique_words, max_tf, self.named_entity)
+                            quote_url, term_dict, doc_length, amount_of_unique_words, max_tf, most_frequent_term, self.named_entity)
         return document
 
     def remove_signs(self, term):
@@ -473,7 +475,7 @@ class Parse:
         for term in text_tokens:
             if term[0] == "“":
                 term = term[1:len(term)]
-        text_tokens = [i for i in text_tokens if i.isascii()  and (i[0].isdigit() or i[0].isupper())]
+        text_tokens = [i for i in text_tokens if i.isascii() and (i[0].isdigit() or i[0].isupper())]
         origin = text.split(" ")
 
         names = []
