@@ -3,7 +3,7 @@ import pathlib
 import time
 from collections import defaultdict
 
-import numpy
+import numpy as np
 
 import utils
 
@@ -43,7 +43,7 @@ class Ranker:
                     term_doc = doc_tuple[0][2]
                     doc_vector = self.get_doc_vector(term_doc, word2vec)
                     try:
-                        sim = numpy.dot(doc_vector, query_vector)/((numpy.linalg.norm(doc_vector) * numpy.linalg.norm(query_vector)))
+                        sim = np.dot(doc_vector, query_vector)/((np.linalg.norm(doc_vector) * np.linalg.norm(query_vector)))
                     except:
                         continue
 
