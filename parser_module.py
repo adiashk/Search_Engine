@@ -115,7 +115,7 @@ class Parse:
             if retweet_url is not None:
                 last_slash_index = retweet_url.rfind('/')
                 if last_slash_index > 0:
-                    original_tweet_id = retweet_url[last_slash_index+1:len(retweet_url)-2]
+                    original_tweet_id = retweet_url[last_slash_index + 1:len(retweet_url) - 2]
                     if len(original_tweet_id) > 0 and original_tweet_id.isdigit():
                         if original_tweet_id not in self.re_tweet_set:
                             self.re_tweet_set.add(original_tweet_id)
@@ -135,7 +135,7 @@ class Parse:
         temp_split_hashtag = []
         index = 0
         doc_length = 0
-        counter_rt=0
+        counter_rt = 0
         while index < len(tokenized_text):
             term = tokenized_text[index]
             term = self.remove_signs(term)
@@ -152,7 +152,8 @@ class Parse:
             # roles :
             term, skip = self.convert_numbers(index, term, tokenized_text)
             temp_split_hashtag, to_delete_Hash = self.convert_hashtag(term, temp_split_hashtag)
-            temp_split_url, to_delete_URL = self.convert_url(term, temp_split_url)  # create set of terms from URL or full text
+            temp_split_url, to_delete_URL = self.convert_url(term,
+                                                             temp_split_url)  # create set of terms from URL or full text
             #   temp_split_url, to_delete_URL = self.convert_url(term, temp_split_url)  # create set of terms from URL or full text
 
             if self.stemming:
@@ -193,7 +194,7 @@ class Parse:
             max_tf = 0
 
         document = Document(tweet_id, tweet_date, full_text, url, retweet_text, retweet_url, quote_text,
-                            quote_url, term_dict, doc_length,amount_of_unique_words, max_tf, self.named_entity)
+                            quote_url, term_dict, doc_length, amount_of_unique_words, max_tf, self.named_entity)
         return document
 
     def remove_signs(self, term):
@@ -304,7 +305,6 @@ class Parse:
         pattern = [i for i in pattern if i.lower() not in self.stop_words]
         return pattern
 
-
     def find_url(self, text_tokens):
         url = [s for s in text_tokens if "http" in s]
         split_urls = []
@@ -317,7 +317,6 @@ class Parse:
     def remove_url_from_token(self, text_tokens):
         text_tokens = [x for x in text_tokens if "http" not in x]
         return text_tokens
-
 
     def convert_numbers(self, index, term, tokenized_text):
         skip = 0
@@ -363,28 +362,50 @@ class Parse:
         return term, skip
 
     def convert_big_numbers(self, index, term, tokenized_text, skip):  # get term that it only digits
+        # TODO-
         is_changed = False
         number = int(float(term))
         if 1000 <= number < 1000000:
-            new_num = round(number / 1000, 3)  # keep 3 digits
-            if new_num == int(new_num):
-                term = str(int(new_num)) + "K"
-            else:
-                term = str(new_num) + "K"
+            # new_num = round(number / 1000, 3)  # keep 3 digits
+            new_num = number / 1000
+            dot_index = str(new_num).index('.')
+            new_num_small = str(new_num)[0:dot_index + 4]
+            new_num = str(new_num)[0:dot_index]
+            try:
+                if int(new_num) == float(new_num_small):
+                    term = new_num + "K"
+                else:
+                    term = new_num_small + "K"
+            except:
+                term = new_num_small + "K"
             is_changed = True
         elif 1000000 <= number < 1000000000:
-            new_num = round(number / 1000000, 3)
-            if new_num == int(new_num):
-                term = str(int(new_num)) + "M"
-            else:
-                term = str(new_num) + "M"
+            new_num = number / 1000000
+            dot_index = str(new_num).index('.')
+            new_num_small = str(new_num)[0:dot_index + 4]
+            new_num = str(new_num)[0:dot_index]
+            try:
+                if int(new_num) == float(new_num_small):
+                    term = new_num + "M"
+                else:
+                    term = new_num_small + "M"
+            except:
+                term = new_num_small + "M"
+
             is_changed = True
         elif 1000000000 <= number:
-            new_num = round(number / 1000000000, 3)
-            if new_num == int(new_num):
-                term = str(int(new_num)) + "B"
-            else:
-                term = str(new_num) + "B"
+            new_num = number / 1000000000
+            dot_index = str(new_num).index('.')
+            new_num_small = str(new_num)[0:dot_index + 4]
+            new_num = str(new_num)[0:dot_index]
+            try:
+                if int(new_num) == float(new_num_small):
+                    term = new_num + "B"
+                else:
+                    term = new_num_small + "B"
+            except:
+                term = new_num_small + "B"
+
             is_changed = True
 
         term, skip = self.convert_divided_numbers(index, term, tokenized_text, skip,
@@ -407,14 +428,13 @@ class Parse:
                 slash_index = after_term.index('/')
                 # if after_term[slash_index-1] is not None and after_term[slash_index + 1] is not None:
                 if len(after_term) >= 3:
-                    if after_term[slash_index-1].isdigit():
+                    if after_term[slash_index - 1].isdigit():
                         if slash_index + 1 < len(after_term) - 1:
                             if after_term[slash_index + 1].isdigit():
                                 if not is_big:
                                     term += ' ' + after_term
                             skip += 1
         return term, skip
-
 
     def Named_Entity_Recognition(self, text_tokens):
         names = []
@@ -425,12 +445,12 @@ class Parse:
         while index < len(text_tokens):
             term = text_tokens[index]
             if len(term) > 0 and term[0].isupper():
-            # if len(term) > 0 and (term[0].isupper() or term[0].isdigit()):
+                # if len(term) > 0 and (term[0].isupper() or term[0].isdigit()):
                 next_index = index + 1
                 while next_index < len(text_tokens):
                     next_term = text_tokens[next_index]
                     if len(next_term) > 0 and next_term[0].isupper():
-                    # if len(next_term) > 0 and (next_term[0].isupper() or next_term[0].isdigit()):
+                        # if len(next_term) > 0 and (next_term[0].isupper() or next_term[0].isdigit()):
                         if '-' in next_term:
                             next_term = next_term.replace('-', ' ')
                         # if term[0].isdigit() and next_term[0].isdigit():
@@ -448,7 +468,6 @@ class Parse:
 
         counter_names = Counter(names)
         return counter_names
-
 
     def convert_stemming(self, term):
         ps = PorterStemmer()
