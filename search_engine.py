@@ -188,8 +188,8 @@ def read_queries(queries):
 
 def main(corpus_path, output_path, stemming, queries, num_docs_to_retrieve):
     word2vec = Word2vec()
-    # num_of_writes = run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve, word2vec)
-    # union_posting_files(num_of_writes, stemming)
+    num_of_writes = run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve, word2vec)
+    union_posting_files(num_of_writes, stemming)
     print("finish union posting files: ", time.asctime(time.localtime(time.time())))
     if type(queries) != list:
         queries = read_queries(queries)
