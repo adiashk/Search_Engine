@@ -195,26 +195,24 @@ def read_queries(queries):
 
 def main(corpus_path, output_path, stemming, queries, num_docs_to_retrieve):
     word2vec = Word2vec()
-    # num_of_writes = run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve, word2vec)
-    # union_posting_files(num_of_writes, stemming)
+    num_of_writes = run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve, word2vec)
+    union_posting_files(num_of_writes, stemming)
     print("finish union posting files: ", time.asctime(time.localtime(time.time())))
     if type(queries) != list:
         queries = read_queries(queries)
 
-    # query = input("Please enter a query: ")
-    # k = int(input("Please enter number of docs to retrieve: "))
     inverted_index = load_index()
     # temp = dict(sorted(inverted_index.items(), key=lambda item: item[1].isdigit(), reverse=False))
     # temp = dict(sorted(inverted_index.items(), reverse=True))
 
     rank_query = search_and_rank_query(queries, inverted_index, num_docs_to_retrieve, stemming, word2vec)
-    with open('results.csv', 'a', newline='') as f:
+    with open(output_path, 'a', newline='') as f:
         writer = csv.writer(f)
         writer.writerow(["Query_num", "Tweet_id", "Rank"])
     for i in rank_query:
         # print("Query number ", i + 1, " results: ")
         for doc_tuple in rank_query[i]:
             # print('tweet id: {}, similarity: {}'.format(doc_tuple[0], doc_tuple[1]))
-            with open('results.csv', 'a', newline='') as f:
+            with open(output_path, 'a', newline='') as f:
                 writer = csv.writer(f)
                 writer.writerow([i+1, doc_tuple[0], doc_tuple[1]])
