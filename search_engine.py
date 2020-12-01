@@ -54,6 +54,7 @@ def run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve
         # print('Finished parsing and indexing. Starting to export files')
     write_and_clean_buffer(indexer, num_of_writes, stemming)
     print("finish parser & index: ", time.asctime(time.localtime(time.time())))
+    indexer.inverted_idx = {key: val for key, val in indexer.inverted_idx.items() if val != 1}
     utils.save_obj(indexer.inverted_idx, "inverted_idx")
     print("finish save index: ", time.asctime(time.localtime(time.time())))
 
@@ -165,7 +166,7 @@ def union_2_files(dict1, dict2):
 def load_index():
     print('Load inverted index')
     inverted_index = utils.load_obj("inverted_idx")
-    inverted_index = {key: val for key, val in inverted_index.items() if val != 1}
+    # inverted_index = {key: val for key, val in inverted_index.items() if val != 1}
     return inverted_index
 
 

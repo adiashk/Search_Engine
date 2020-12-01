@@ -332,6 +332,7 @@ class Parse:
 
             else:
                 try:
+
                     float(term)  # decimal number
                     term, skip = self.convert_small_numbers(index, term, tokenized_text, skip)
                 except:  # sings
