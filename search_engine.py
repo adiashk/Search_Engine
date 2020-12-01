@@ -126,6 +126,7 @@ def union_posting_files(num_of_writes, stemming):
             dict1 = union_2_files(dict1, dict2)
         counter = 1
         filename = str(save_path + l)
+        dict1 = {k: v for k, v in dict1.items() if len(v) >= 2}
         utils.save_obj(dict1, filename)
 
 
@@ -135,6 +136,9 @@ def union_posting_files(num_of_writes, stemming):
 #         for key, value in d.items():
 #             dd[key].extend(value)
 #     return dd
+
+
+
 
 def union_2_files(dict1, dict2):
     dd = defaultdict(list)
@@ -161,6 +165,7 @@ def union_2_files(dict1, dict2):
 def load_index():
     print('Load inverted index')
     inverted_index = utils.load_obj("inverted_idx")
+    inverted_index = {key: val for key, val in inverted_index.items() if val != 1}
     return inverted_index
 
 

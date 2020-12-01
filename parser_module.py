@@ -301,11 +301,11 @@ class Parse:
             # tag = tag.replace('www.', '')
             tag = tag.replace('www.', '')
             pattern = re.compile(r'[\//\:/?=\-&+]', re.UNICODE).split(tag)
-            pattern += ["www"]
+            # pattern += ["www"]
         else:
             pattern = re.compile(r'[\:/?=\-&+]', re.UNICODE).split(tag)
         pattern = [i for i in pattern if i]
-        pattern = [i for i in pattern if i.lower() not in self.stop_words]
+        pattern = [i for i in pattern if i.lower() not in self.stop_words and i != "status" and i != "web"]
         return pattern
 
 
