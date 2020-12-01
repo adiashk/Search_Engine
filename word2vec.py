@@ -58,6 +58,8 @@ class Word2vec:
         # print(self.model.wv['computer'])
 
 # word2vec = Word2vec()
+# x=word2vec.model.most_similar(positive=['woman'], topn=1)
+# print(x)
 # dog = word2vec.model['dog']
 # print(dog)
 # print(word2vec.model.similarity('home','house'))

@@ -117,7 +117,7 @@ class Parse:
             if retweet_url is not None:
                 last_slash_index = retweet_url.rfind('/')
                 if last_slash_index > 0:
-                    original_tweet_id = retweet_url[last_slash_index+1:len(retweet_url)-2]
+                    original_tweet_id = retweet_url[last_slash_index + 1:len(retweet_url) - 2]
                     if len(original_tweet_id) > 0 and original_tweet_id.isdigit():
                         if original_tweet_id not in self.re_tweet_set:
                             self.re_tweet_set.add(original_tweet_id)
@@ -137,7 +137,7 @@ class Parse:
         temp_split_hashtag = []
         index = 0
         doc_length = 0
-        counter_rt=0
+        counter_rt = 0
         while index < len(tokenized_text):
             term = tokenized_text[index]
             term = self.remove_signs(term)
@@ -370,25 +370,46 @@ class Parse:
         is_changed = False
         number = int(float(term))
         if 1000 <= number < 1000000:
-            new_num = round(number / 1000, 3)  # keep 3 digits
-            if new_num == int(new_num):
-                term = str(int(new_num)) + "K"
-            else:
-                term = str(new_num) + "K"
+            # new_num = round(number / 1000, 3)  # keep 3 digits
+            new_num = number / 1000
+            dot_index = str(new_num).index('.')
+            new_num_small = str(new_num)[0:dot_index + 4]
+            new_num = str(new_num)[0:dot_index]
+            try:
+                if int(new_num) == float(new_num_small):
+                    term = new_num + "K"
+                else:
+                    term = new_num_small + "K"
+            except:
+                term = new_num_small + "K"
             is_changed = True
         elif 1000000 <= number < 1000000000:
-            new_num = round(number / 1000000, 3)
-            if new_num == int(new_num):
-                term = str(int(new_num)) + "M"
-            else:
-                term = str(new_num) + "M"
+            new_num = number / 1000000
+            dot_index = str(new_num).index('.')
+            new_num_small = str(new_num)[0:dot_index + 4]
+            new_num = str(new_num)[0:dot_index]
+            try:
+                if int(new_num) == float(new_num_small):
+                    term = new_num + "M"
+                else:
+                    term = new_num_small + "M"
+            except:
+                term = new_num_small + "M"
+
             is_changed = True
         elif 1000000000 <= number:
-            new_num = round(number / 1000000000, 3)
-            if new_num == int(new_num):
-                term = str(int(new_num)) + "B"
-            else:
-                term = str(new_num) + "B"
+            new_num = number / 1000000000
+            dot_index = str(new_num).index('.')
+            new_num_small = str(new_num)[0:dot_index + 4]
+            new_num = str(new_num)[0:dot_index]
+            try:
+                if int(new_num) == float(new_num_small):
+                    term = new_num + "B"
+                else:
+                    term = new_num_small + "B"
+            except:
+                term = new_num_small + "B"
+
             is_changed = True
 
         term, skip = self.convert_divided_numbers(index, term, tokenized_text, skip,
@@ -411,7 +432,7 @@ class Parse:
                 slash_index = after_term.index('/')
                 # if after_term[slash_index-1] is not None and after_term[slash_index + 1] is not None:
                 if len(after_term) >= 3:
-                    if after_term[slash_index-1].isdigit():
+                    if after_term[slash_index - 1].isdigit():
                         if slash_index + 1 < len(after_term) - 1:
                             if after_term[slash_index + 1].isdigit():
                                 if not is_big:
