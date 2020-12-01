@@ -400,9 +400,12 @@ class Parse:
             is_changed = True
         elif 1000000000 <= number:
             new_num = number / 1000000000
-            dot_index = str(new_num).index('.')
-            new_num_small = str(new_num)[0:dot_index + 4]
-            new_num = str(new_num)[0:dot_index]
+            new_num_small = ''
+            if '.' in str(new_num):
+                dot_index = str(new_num).index('.')
+                new_num_small = str(new_num)[0:dot_index + 4]
+                new_num = str(new_num)[0:dot_index]
+
             try:
                 if int(new_num) == float(new_num_small):
                     term = new_num + "B"
