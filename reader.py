@@ -18,6 +18,17 @@ class ReadFile:
         df = pd.read_parquet(full_path, engine="pyarrow")
         return df.values.tolist()
 
+
+        # except:
+        #     file_name = self.get_files_names_in_dir()
+        #     full_path = os.path.join(self.corpus_path, file_name)
+        #     df = pd.read_parquet(full_path, engine="pyarrow")
+        #     return df.values.tolist()
+
+        # full_path = os.path.join(self.corpus_path, file_name)
+        # df = pd.read_parquet(full_path, engine="pyarrow")
+        # return df.values.tolist()
+
     def get_files_names_in_dir(self):
         subdirectories = [x[0] for x in os.walk(self.corpus_path)]
         all_files = []
@@ -29,11 +40,10 @@ class ReadFile:
         return all_files
 
 
-# from dataclasses import dataclass
-#
-#
-# @dataclass
-# class doc:
-#     a = 1
-#     b = None
-#     c = None
+    def read_file_by_name(self, file_name):
+
+        if self.corpus_path not in file_name:
+            file_name = os.path.join(self.corpus_path, file_name)
+
+        df = pd.read_parquet(file_name, engine="pyarrow")
+        return df.values.tolist()

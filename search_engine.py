@@ -23,7 +23,7 @@ def run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve
 
     :return:
     """
-    print("start: ", time.asctime(time.localtime(time.time())))
+    # print("start: ", time.asctime(time.localtime(time.time())))
     number_of_documents = 0
     num_of_writes = 1
     config = ConfigClass(corpus_path)
@@ -36,7 +36,7 @@ def run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve
     counter = 0
     names = r.get_files_names_in_dir()
     for name in names:
-        documents_list = r.read_file(file_name=str(name))
+        documents_list = r.read_file_by_name(file_name=str(name))
         for idx, document in enumerate(documents_list):
             parsed_document = p.parse_doc(document)  # parse the document
             if parsed_document == {}:  # RT
@@ -46,30 +46,32 @@ def run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve
             indexer.add_new_doc(parsed_document, num_of_writes)  # index the document data
             counter += 1
             if counter >= 500000:
-                write_and_clean_buffer(indexer, num_of_writes, stemming)
+                write_and_clean_buffer(indexer, num_of_writes, stemming,config, output_path)
                 counter = 0
-                print("finish parser & index number: ", num_of_writes, " At: ",
-                      time.asctime(time.localtime(time.time())))
+                # print("finish parser & index number: ", num_of_writes, " At: ", time.asctime(time.localtime(time.time())))
                 num_of_writes += 1
         # print('Finished parsing and indexing. Starting to export files')
-    write_and_clean_buffer(indexer, num_of_writes, stemming)
-    print("finish parser & index: ", time.asctime(time.localtime(time.time())))
+    write_and_clean_buffer(indexer, num_of_writes, stemming,config, output_path)
+    # print("finish parser & index: ", time.asctime(time.localtime(time.time())))
     indexer.inverted_idx = {key: val for key, val in indexer.inverted_idx.items() if val != 1}
     utils.save_obj(indexer.inverted_idx, "inverted_idx")
-    print("finish save index: ", time.asctime(time.localtime(time.time())))
+    # print("finish save index: ", time.asctime(time.localtime(time.time())))
 
     return num_of_writes
 
 
-def write_and_clean_buffer(indexer, write_number, stemming):
+def write_and_clean_buffer(indexer, write_number, stemming,config, output_path):
     # after 500000 docs --> write the postingDict to the Disk
 
-    path = pathlib.Path().absolute()
+    # path = pathlib.Path().absolute()
+    # path = output_path
 
     if stemming:
-        save_path = str(path) + '\\posting_stem\\'
+        # save_path = os.path.join(output_path, config.saveFilesWithStem)
+        save_path = str(output_path) + config.saveFilesWithStem + "/"
     else:
-        save_path = str(path) + '\\posting\\'
+        # save_path = os.path.join(output_path, config.saveFilesWithoutStem)
+        save_path = str(output_path) + config.saveFilesWithoutStem + "/"
 
     if not os.path.exists(os.path.dirname(save_path)):
         os.makedirs(os.path.dirname(save_path))
@@ -86,9 +88,9 @@ def write_and_clean_buffer(indexer, write_number, stemming):
     indexer.postingDict = defaultdict(list)
 
     if stemming:
-        save_path = str(path) + '\\documents_stem\\'
+        save_path = str(output_path) + '\\documents_stem\\'
     else:
-        save_path = str(path) + '\\documents\\'
+        save_path = str(output_path) + '\\documents\\'
 
     if not os.path.exists(os.path.dirname(save_path)):
         os.makedirs(os.path.dirname(save_path))
@@ -109,13 +111,14 @@ def write_and_clean_buffer(indexer, write_number, stemming):
 #             res[key] = val
 #     return res
 
-def union_posting_files(num_of_writes, stemming):
+def union_posting_files(num_of_writes, stemming,config, output_path):
     # inverted_index = utils.load_obj("inverted_idx")
-    path = pathlib.Path().absolute()
+    # path = pathlib.Path().absolute()
+    path = output_path
     if stemming:
-        save_path = str(path) + '\\posting_stem\\'
+        save_path = str(path) + config.saveFilesWithStem + "/"
     else:
-        save_path = str(path) + '\\posting\\'
+        save_path = str(path) + config.saveFilesWithoutStem + "/"
     counter = 1
     for l in letters:
         filename = str(save_path + l + str(counter))
@@ -137,8 +140,6 @@ def union_posting_files(num_of_writes, stemming):
 #         for key, value in d.items():
 #             dd[key].extend(value)
 #     return dd
-
-
 
 
 def union_2_files(dict1, dict2):
@@ -163,24 +164,25 @@ def union_2_files(dict1, dict2):
     return dd
 
 
-def load_index():
-    print('Load inverted index')
-    inverted_index = utils.load_obj("inverted_idx")
-    # inverted_index = {key: val for key, val in inverted_index.items() if val != 1}
-    return inverted_index
+# def load_index():
+#     print('Load inverted index')
+#     inverted_index = utils.load_obj("inverted_idx")
+#     # inverted_index = {key: val for key, val in inverted_index.items() if val != 1}
+#     return inverted_index
 
 
-def search_and_rank_query(queries_list, inverted_index, num_docs_to_retrieve, stemming, word2vec):
+def search_and_rank_query(corpus_path, queries_list, inverted_index, num_docs_to_retrieve, stemming, word2vec, output_path):
+    config = ConfigClass(corpus_path)
     p = Parse(stemming)
     answers = defaultdict(list)
     for i, q in enumerate(queries_list):
-        print("start query number: ", i + 1)
+        # print("start query number: ", i + 1)
         query = p.parse_query(q)
         searcher = Searcher(inverted_index, stemming, word2vec)
-        relevant_docs = searcher.relevant_docs_from_posting(query, stemming)
-        ranked_docs = searcher.ranker.rank_relevant_doc(relevant_docs, query, word2vec, stemming)
+        relevant_docs = searcher.relevant_docs_from_posting(query, stemming, config, output_path)
+        ranked_docs = searcher.ranker.rank_relevant_doc(relevant_docs, query, word2vec, stemming, output_path)
         answers[i] = searcher.ranker.retrieve_top_k(ranked_docs, num_docs_to_retrieve)
-        print("finish query number: ", i + 1)
+        # print("finish query number: ", i + 1)
     return answers
 
 
@@ -194,25 +196,27 @@ def read_queries(queries):
 
 
 def main(corpus_path, output_path, stemming, queries, num_docs_to_retrieve):
+
+    config = ConfigClass(corpus_path)
     word2vec = Word2vec()
     num_of_writes = run_engine(corpus_path, output_path, stemming, queries, num_docs_to_retrieve, word2vec)
-    union_posting_files(num_of_writes, stemming)
-    print("finish union posting files: ", time.asctime(time.localtime(time.time())))
+    union_posting_files(num_of_writes, stemming,config, output_path)
+    # print("finish union posting files: ", time.asctime(time.localtime(time.time())))
     if type(queries) != list:
         queries = read_queries(queries)
 
-    inverted_index = load_index()
-    # temp = dict(sorted(inverted_index.items(), key=lambda item: item[1].isdigit(), reverse=False))
-    # temp = dict(sorted(inverted_index.items(), reverse=True))
+    inverted_index = utils.load_inverted_index()
+    # temp1 = dict(sorted(inverted_index.items(), key=lambda item: item[1].isdigit(), reverse=False))
+    # temp2 = dict(sorted(inverted_index.items(), reverse=True))
 
-    rank_query = search_and_rank_query(queries, inverted_index, num_docs_to_retrieve, stemming, word2vec)
-    with open(output_path, 'a', newline='') as f:
+    rank_query = search_and_rank_query(corpus_path,queries, inverted_index, num_docs_to_retrieve, stemming, word2vec, output_path)
+    path = os.path.join(output_path, 'results.csv')
+    with open(path, 'a', newline='') as f:
         writer = csv.writer(f)
         writer.writerow(["Query_num", "Tweet_id", "Rank"])
     for i in rank_query:
-        # print("Query number ", i + 1, " results: ")
         for doc_tuple in rank_query[i]:
-            # print('tweet id: {}, similarity: {}'.format(doc_tuple[0], doc_tuple[1]))
-            with open(output_path, 'a', newline='') as f:
+            print('tweet id: {}, similarity: {}'.format(doc_tuple[0], doc_tuple[1]))
+            with open(path, 'a', newline='') as f:
                 writer = csv.writer(f)
                 writer.writerow([i+1, doc_tuple[0], doc_tuple[1]])

@@ -20,3 +20,8 @@ def load_obj(name):
     """
     with open(name + '.pkl', 'rb') as f:
         return pickle.load(f)
+
+def load_inverted_index ():
+    inverted_index = load_obj("inverted_idx")
+    # inverted_index = {key: val for key, val in inverted_index.items() if val != 1}
+    return inverted_index

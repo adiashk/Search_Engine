@@ -20,7 +20,7 @@ class Searcher:
         self.word2vec = word2vec
 
 
-    def relevant_docs_from_posting(self, query, stemming):
+    def relevant_docs_from_posting(self, query, stemming,config, output_path):
         """
         This function loads the posting list and count the amount of relevant documents per term.
         :param query: query
@@ -40,16 +40,17 @@ class Searcher:
         # query_and_similar.extend(query)
         # query_and_similar.extend(similar_words)
         # posting = utils.load_obj("posting")
-        print("start relevant At: ", time.asctime(time.localtime(time.time())))
+        # print("start relevant At: ", time.asctime(time.localtime(time.time())))
 
         posting = {}
         relevant_docs = {}
         query_set = set(query)
-        path = pathlib.Path().absolute()
+        # path = pathlib.Path().absolute()
+        path = output_path
         if stemming:
-            save_path = str(path) + '\\posting_stem\\'
+            save_path = str(path) + config.saveFilesWithStem + "/"
         else:
-            save_path = str(path) + '\\posting\\'
+            save_path = str(path) + config.saveFilesWithoutStem + "/"
 
         temp_letter = ''
         for term in query_set:
@@ -77,7 +78,7 @@ class Searcher:
         min_len = min(2000, len(relevant_docs))
         # relevant_docs_sorted = dict(sorted(relevant_docs.items(), key=lambda x: x[1][0], reverse=True))
         relevant_docs_sorted = dict(sorted(relevant_docs.items(), key=lambda x: x[1][0], reverse=True)[:min_len])
-        print("finish relevant At: ", time.asctime(time.localtime(time.time())))
+        # print("finish relevant At: ", time.asctime(time.localtime(time.time())))
         return relevant_docs_sorted
 
 

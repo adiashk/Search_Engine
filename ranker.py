@@ -12,19 +12,20 @@ class Ranker:
     def __init__(self):
         pass
 
-    def rank_relevant_doc(self, relevant_docs, query, word2vec, stemming):  # {tweet_id: num_of_writes, tweet_id: num_of_writes}
+    def rank_relevant_doc(self, relevant_docs, query, word2vec, stemming,output_path):  # {tweet_id: num_of_writes, tweet_id: num_of_writes}
         """
         This function provides rank for each relevant document and sorts them by their scores.
         The current score considers solely the number of terms shared by the tweet (full_text) and query.
         :param relevant_docs: dictionary of documents that contains at least one term from the query.
         :return: sorted list of documents by score
         """
-        print("start similarity At: ", time.asctime(time.localtime(time.time())))
+        # print("start similarity At: ", time.asctime(time.localtime(time.time())))
         # return sorted(relevant_doc.items(), key=lambda item: item[1], reverse=True)
         similarity_dictionary = defaultdict(float)
         query_vector = self.get_doc_vector(query, word2vec)
         relevant_docs_sorted = dict(sorted(relevant_docs.items(), key=lambda x: x[1][1]))
-        path = pathlib.Path().absolute()
+        # path = pathlib.Path().absolute()
+        path = output_path
         if stemming:
             save_path = str(path) + '\\documents_stem\\'
         else:
@@ -49,7 +50,7 @@ class Ranker:
 
                     similarity_dictionary[tweet_id_in_relevant_doc] = sim
                     break
-        print("finish similarity At: ", time.asctime(time.localtime(time.time())))
+        # print("finish similarity At: ", time.asctime(time.localtime(time.time())))
         return sorted(similarity_dictionary.items(), key=lambda x: x[1], reverse=True)
 
 
